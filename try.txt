@@ -1,5 +1,3 @@
 Helloooooo
-<<<<<<< HEAD
 
-=======
->>>>>>> f1d04f3365a60989901b33f0fdd747fcce48c0ac
+Gal's line <3
