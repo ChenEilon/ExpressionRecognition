@@ -15,6 +15,8 @@ faceDet_two = cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")
 faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
+LANDMARKS_COUNT = 68
+
 #######################################################################################
 ##############                   Math and transfornatioms                  ############
 #######################################################################################
@@ -82,29 +84,17 @@ def dist_matrix(dot_m):
             dist_m[j, i] = dist_m[i, j]
     return dist_m
 
-def angle_matrix(dot_m, dist_m):
-    """
-    input - a dot matrix (output of dot_matrix method) and a distance matrix (output of dist_matrix)
-    output - an nxnxn matrix M where M[i, j, k] is the angle [rad] defined by the lines between (xi, yi)-(xj, yj) and (xk, yk)-(xj, yj)
-    """
-    angle_m = np.ndarray(shape=(dot_m.shape[0], dot_m.shape[0], dot_m.shape[0]), dtype=float)
+def angle_array(dot_m, dist_m):
+    angles = []
     for i in range(angle_m.shape[0]):
-        angle_m[i, i, i] = 0
         for j in range(i):
-            angle_m[i, i, j] = 0
-            angle_m[i, j, i] = 0
-            angle_m[j, i, i] = 0
             for k in range(j):
-                # TODO check for zero division
-                angle_m[i, j, k] = np.arccos(
-                    (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k]))
-                angle_m[k, j, i] = angle_m[i, j, k]
-                angle_m[i, k, j] = np.arccos(
-                    (dot_m[i, j] - dot_m[i, k] - dot_m[k, j] + dot_m[k, k]) / (dist_m[i, k] * dist_m[k, j]))
-                angle_m[j, k, i] = angle_m[i, k, j]
-                angle_m[j, i, k] = np.pi - angle_m[i, j, k] - angle_m[i, k, j]
-                angle_m[k, i, j] = angle_m[j, i, k]
-    return angle_m
+                angles.append(np.arccos(
+                    (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k])))
+                angles.append(np.arccos(
+                    (dot_m[i, j] - dot_m[i, k] - dot_m[k, j] + dot_m[k, k]) / (dist_m[i, k] * dist_m[k, j])))
+                angles.append(np.pi - angles[-1] - angles[-2])
+    return np.array(angles)
 
 
 #######################################################################################
@@ -189,9 +179,9 @@ def extract_features(image):
     dot_m = dot_matrix(image)
     dist_m = dist_matrix(dot_m)
     #angles features
-    angle_m = angle_matrix(dot_m, dist_m)
+    angles = angle_array(dot_m, dist_m)
     #flatten and concat
-    return np.append(dist_m.flatten(), angle_m.flatten())
+    return np.append(dist_m.flatten(), angles)
     
 def extract_features_forall(images):
     """
@@ -201,7 +191,16 @@ def extract_features_forall(images):
     features = []
     for image in images:
         features.append(extract_features(image))
-    df = pd.DataFrame(features) #TODO add titles
+    cols = ["dist_{0:d}_{1:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(LANDMARKS_COUNT)]
+    for i in range(LANDMARKS_COUNT):
+        for j in range(i):
+            for k in range(j):
+                cols.append("angle_{2:d}_{1:d}_{0:d}".format(i, j, k))
+                cols.append("angle_{1:d}_{2:d}_{0:d}".format(i, j, k))
+                cols.append("angle_{2:d}_{0:d}_{1:d}".format(i, j, k))
+    drop_cols = ["dist_{0:d}_{0:d}".format(i) for i in range(d)] + ["dist_{0:d}_{1:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(i)]
+    df = pd.DataFrame(features, columns=cols).drop(drop_cols, axis=1)
+    df = (df - df.mean()) #/ df.std()
     return df
     
 def dimension_reduction_pca(df, components = 100):
