@@ -261,4 +261,14 @@ def test_image_features():
     print(df)
 #ip = imagePreprocessing()
 
+def test_images_timing(inputFolder):
+    #1. extract facial landmarks
+    inputFolder = "./images/"
+    images_landmarks = extract_dlib_facial_points(inputFolder)
+    print("landmarks shape: ", str(images_landmarks.shape))
+    #2. extract features df
+    
+    #3. using covariance matrix to reduce dimension
+    #4. reduce dimension with PCA
+
 test_image_features()
