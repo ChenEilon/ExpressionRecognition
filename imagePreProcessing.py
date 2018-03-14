@@ -167,7 +167,7 @@ def extract_dlib_facial_points(inputFolder):
                 
 
 #######################################################################################
-##############            Extract features and reducing dimantions         ############
+##############            Extract features and reducing dimensions         ############
 #######################################################################################
 
 def extract_features(image):
