@@ -16,7 +16,7 @@ faceDet_two = cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")
 faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
-LANDMARKS_COUNT = 4 #TODO change
+LANDMARKS_COUNT = 68 
 
 #######################################################################################
 ##############                   Math and transfornatioms                  ############
@@ -90,11 +90,17 @@ def angle_array(dot_m, dist_m):
     for i in range(dot_m.shape[0]):
         for j in range(i):
             for k in range(j):
-                angles.append(np.arccos(
-                    (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k])))
-                angles.append(np.arccos(
-                    (dot_m[i, j] - dot_m[i, k] - dot_m[k, j] + dot_m[k, k]) / (dist_m[i, k] * dist_m[k, j])))
-                angles.append(np.pi - angles[-1] - angles[-2])
+                #TODO change solution to devision by 0
+                if(dist_m[i, j] * dist_m[j, k] * dist_m[i, k]):
+                    angles.append(-1)
+                    angles.append(-1)
+                    angles.append(-1)
+                else:
+                    angles.append(np.arccos(
+                        (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k])))
+                    angles.append(np.arccos(
+                        (dot_m[i, j] - dot_m[i, k] - dot_m[k, j] + dot_m[k, k]) / (dist_m[i, k] * dist_m[k, j])))
+                    angles.append(np.pi - angles[-1] - angles[-2])
     return np.array(angles)
 
 
@@ -171,9 +177,15 @@ def extract_dlib_facial_points(inputFolder):
 ##############            Extract features and reducing dimensions         ############
 #######################################################################################
 
-def get_correlated_cols(df, threshold=0.8):
+def reduce_correlated_cols(df, threshold=0.8):
+    """
+    input - df &threshold (if 1>|correlation|>threshold then dimension is reduced
+    output - reduced df
+    """
     corr = df.corr()
-    return [corr.columns[i] for i in range(len(corr)) for j in range(i) if abs(corr.iloc[i, j]) >= threshold]
+    corr_cols = [corr.columns[i] for i in range(len(corr)) for j in range(i) if abs(corr.iloc[i, j]) >= threshold]
+    df = df.drop(corr_cols, axis=1)
+    return df
 
 def extract_features(image):
     """
@@ -205,9 +217,6 @@ def extract_features_forall(images):
                 cols.append("angle_{2:d}_{0:d}_{1:d}".format(i, j, k))
     drop_cols = ["dist_{0:d}_{0:d}".format(i) for i in range(LANDMARKS_COUNT)] + ["dist_{0:d}_{1:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(i)]
     df = pd.DataFrame(features, columns=cols).drop(drop_cols, axis=1)
-    df = (df - df.mean()) #/ df.std()
-    corr_cols = get_correlated_cols(df)
-    df.drop(corr_cols, axis=1)
     return df
     
 def dimension_reduction_pca(df, components = 100):
@@ -216,11 +225,6 @@ def dimension_reduction_pca(df, components = 100):
     output - trained PCA
     uses PCA from skylearn
     """
-    #casting df to contain numbers
-    #df = df.apply(lambda x: pd.to_numeric(x,errors='ignore'))
-    #print("Is df contains Nan: ", np.isnan(df).any())
-    X = np.asanyarray(df)
-    print("is finit:", (np.isfinite(X)).all())
     #Standardize the Data
     features = list(df.columns.values)
     # Separating out the features
@@ -266,20 +270,22 @@ def test_image_features():
     print("features after PCA shape: ", str(df.shape))
     print(df)
 
-def test_images_timing(inputFolder):
+def test_images_flow(inputFolder):
     #1. extract facial landmarks
-    inputFolder = "./images/"
     images_landmarks = extract_dlib_facial_points(inputFolder)
     print("landmarks shape: ", str(images_landmarks.shape))
     #2. extract features df
     df = extract_features_forall(images_landmarks)
     print("features shape: ", str(df.shape))
-    print(df)
-    #3. using covariance matrix to reduce dimension
-    
+    #print(df)
+    #3. using correlation matrix to reduce dimension
+    corrDf = reduce_correlated_cols(df)
+    print("corr df shape: ", str(df.shape))
+    #print(df)
     #4. reduce dimension with PCA
-    #(pca, newDf) = dimension_reduction_pca(df, components = 100)
-    #print("df after PCA shape: ", str(newDf.shape))
+    (pca, newDf) = dimension_reduction_pca(corrDf, components = 100)
+    print("df after PCA shape: ", str(newDf.shape))
     #print(newDf)
 
-test_image_features()
+#test_image_features()
+test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
