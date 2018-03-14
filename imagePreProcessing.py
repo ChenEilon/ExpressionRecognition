@@ -16,7 +16,6 @@ faceDet_two = cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")
 faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
-LANDMARKS_COUNT = 68 
 
 #######################################################################################
 ##############                   Math and transfornatioms                  ############
@@ -224,8 +223,8 @@ def extract_features_forall(images):
     features = []
     for image in images:
         features.append(extract_features(image))
-    cols = ["dist_{1:d}_{0:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(i)]
-    for i in range(LANDMARKS_COUNT):
+    cols = ["dist_{1:d}_{0:d}".format(i, j) for i in range(len(images[0])) for j in range(i)]
+    for i in range(len(images[0])):
         for j in range(i):
             for k in range(j):
                 cols.append("angle_{2:d}_{1:d}_{0:d}".format(i, j, k))
