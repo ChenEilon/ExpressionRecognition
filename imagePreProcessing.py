@@ -85,7 +85,22 @@ def dist_matrix(dot_m):
             dist_m[j, i] = dist_m[i, j]
     return dist_m
 
+def dist_array(dist_m):
+    """
+    input - a distance matrix (output of dist_matrix method)
+    output - an array of all of the distances, w/o duplicates
+    """
+    dists = []
+    for i in range(dist_m.shape[0]):
+        for j in range(i):
+            dists.append(dist_m[i, j])
+    return np.array(dists)
+
 def angle_array(dot_m, dist_m):
+    """
+    input - a dot matrix (output of dot_matrix method), a distance matrix (output of dist_matrix method)
+    output - an array of all of the angles, w/o duplicates
+    """
     angles = []
     for i in range(dot_m.shape[0]):
         for j in range(i):
@@ -195,10 +210,11 @@ def extract_features(image):
     #distance features
     dot_m = dot_matrix(image)
     dist_m = dist_matrix(dot_m)
+    dists = dist_array(dist_m)
     #angles features
     angles = angle_array(dot_m, dist_m)
     #flatten and concat
-    return np.append(dist_m.flatten(), angles)
+    return np.append(dists, angles)
     
 def extract_features_forall(images):
     """
@@ -208,15 +224,13 @@ def extract_features_forall(images):
     features = []
     for image in images:
         features.append(extract_features(image))
-    cols = ["dist_{0:d}_{1:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(LANDMARKS_COUNT)]
+    cols = ["dist_{1:d}_{0:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(i)]
     for i in range(LANDMARKS_COUNT):
         for j in range(i):
             for k in range(j):
                 cols.append("angle_{2:d}_{1:d}_{0:d}".format(i, j, k))
                 cols.append("angle_{1:d}_{2:d}_{0:d}".format(i, j, k))
                 cols.append("angle_{2:d}_{0:d}_{1:d}".format(i, j, k))
-    drop_cols = ["dist_{0:d}_{0:d}".format(i) for i in range(LANDMARKS_COUNT)] + ["dist_{0:d}_{1:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(i)]
-    df = pd.DataFrame(features, columns=cols).drop(drop_cols, axis=1)
     return df
     
 def dimension_reduction_pca(df, components = 100):
