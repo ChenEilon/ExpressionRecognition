@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+import time
 
 
 faceDet = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
@@ -15,6 +16,7 @@ faceDet_two = cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")
 faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
+LANDMARKS_COUNT = 4 #TODO change
 
 #######################################################################################
 ##############                   Math and transfornatioms                  ############
@@ -85,6 +87,7 @@ def dist_matrix(dot_m):
 
 def angle_array(dot_m, dist_m):
     angles = []
+    for i in range(dot_m.shape[0]):
         for j in range(i):
             for k in range(j):
                 angles.append(np.arccos(
@@ -200,6 +203,7 @@ def extract_features_forall(images):
                 cols.append("angle_{2:d}_{1:d}_{0:d}".format(i, j, k))
                 cols.append("angle_{1:d}_{2:d}_{0:d}".format(i, j, k))
                 cols.append("angle_{2:d}_{0:d}_{1:d}".format(i, j, k))
+    drop_cols = ["dist_{0:d}_{0:d}".format(i) for i in range(LANDMARKS_COUNT)] + ["dist_{0:d}_{1:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(i)]
     df = pd.DataFrame(features, columns=cols).drop(drop_cols, axis=1)
     df = (df - df.mean()) #/ df.std()
     corr_cols = get_correlated_cols(df)
@@ -258,6 +262,9 @@ def test_image_features():
     features = extract_features_forall(images)
     print("features shape: ", str(features.shape))
     print(features)
+    (pca, df) = dimension_reduction_pca(features, 10)
+    print("features after PCA shape: ", str(df.shape))
+    print(df)
 
 def test_images_timing(inputFolder):
     #1. extract facial landmarks
