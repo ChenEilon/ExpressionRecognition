@@ -167,8 +167,12 @@ def extract_dlib_facial_points(inputFolder):
                 
 
 #######################################################################################
-##############            Extract features and reducing dimantions         ############
+##############            Extract features and reducing dimensions         ############
 #######################################################################################
+
+def get_correlated_cols(df, threshold=0.8):
+    corr = df.corr()
+    return [corr.columns[i] for i in range(len(corr)) for j in range(i) if abs(corr.iloc[i, j]) >= threshold]
 
 def extract_features(image):
     """
@@ -201,6 +205,8 @@ def extract_features_forall(images):
     drop_cols = ["dist_{0:d}_{0:d}".format(i) for i in range(d)] + ["dist_{0:d}_{1:d}".format(i, j) for i in range(LANDMARKS_COUNT) for j in range(i)]
     df = pd.DataFrame(features, columns=cols).drop(drop_cols, axis=1)
     df = (df - df.mean()) #/ df.std()
+    corr_cols = get_correlated_cols(df)
+    df.drop(corr_cols)
     return df
     
 def dimension_reduction_pca(df, components = 100):
