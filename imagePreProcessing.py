@@ -206,7 +206,7 @@ def extract_features_forall(images):
 def dimension_reduction_pca(df, components = 100):
     """
     input - dataframe of features & wanted dimension of features
-    output - df with #components features per image.
+    output - trained PCA
     uses PCA from skylearn
     """
     #casting df to contain numbers
@@ -223,8 +223,8 @@ def dimension_reduction_pca(df, components = 100):
     #dim reduction
     pca = PCA(n_components=components)
     principalComponents = pca.fit_transform(x)
-    principalDf = pd.DataFrame(data = principalComponents)
-    return principalDf
+    principalDf = pd.DataFrame(data = principalComponents) #TODO disable and not return normally.
+    return (pca, principalDf)
     
     
 #######################################################################################
@@ -255,10 +255,9 @@ def test_image_features():
     features = extract_features_forall(images)
     print("features shape: ", str(features.shape))
     print(features)
-    df = dimension_reduction_pca(features, 10)
-    print("features after PCA shape: ", str(df.shape))
-    print(df)
-#ip = imagePreprocessing()
+    #df = dimension_reduction_pca(features, 10)
+    #print("features after PCA shape: ", str(df.shape))
+    #print(df)
 
 def test_images_timing(inputFolder):
     #1. extract facial landmarks
@@ -266,8 +265,14 @@ def test_images_timing(inputFolder):
     images_landmarks = extract_dlib_facial_points(inputFolder)
     print("landmarks shape: ", str(images_landmarks.shape))
     #2. extract features df
-    
+    df = extract_features_forall(images_landmarks)
+    print("features shape: ", str(df.shape))
+    print(df)
     #3. using covariance matrix to reduce dimension
+    
     #4. reduce dimension with PCA
+    #(pca, newDf) = dimension_reduction_pca(df, components = 100)
+    #print("df after PCA shape: ", str(newDf.shape))
+    #print(newDf)
 
 test_image_features()
