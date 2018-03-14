@@ -86,7 +86,7 @@ def dist_matrix(dot_m):
 
 def angle_array(dot_m, dist_m):
     angles = []
-    for i in range(angle_m.shape[0]):
+    for i in range(dot_m.shape[0]):
         for j in range(i):
             for k in range(j):
                 angles.append(np.arccos(
