@@ -207,7 +207,7 @@ def extract_features_forall(images):
     df = pd.DataFrame(features, columns=cols).drop(drop_cols, axis=1)
     df = (df - df.mean()) #/ df.std()
     corr_cols = get_correlated_cols(df)
-    df.drop(corr_cols)
+    df.drop(corr_cols, axis=1)
     return df
     
 def dimension_reduction_pca(df, components = 100):
