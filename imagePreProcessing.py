@@ -230,6 +230,7 @@ def extract_features_forall(images):
                 cols.append("angle_{2:d}_{1:d}_{0:d}".format(i, j, k))
                 cols.append("angle_{1:d}_{2:d}_{0:d}".format(i, j, k))
                 cols.append("angle_{2:d}_{0:d}_{1:d}".format(i, j, k))
+    df = pd.DataFrame(features, columns=cols)
     return df
     
 def dimension_reduction_pca(df, components = 100):
