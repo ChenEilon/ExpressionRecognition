@@ -183,7 +183,8 @@ def extract_dlib_facial_points(inputFolder):
             # convert the facial landmark (x, y)-coordinates to a NumPy array
                 shape = predictor(gray, rects[0])
                 shape = face_utils.shape_to_np(shape)
-                faces_68_landmarks.append(shape)
+                #faces_68_landmarks.append(shape)
+                faces_68_landmarks.append(shape[:15])#TODO swith
     return np.array(faces_68_landmarks)
                 
 
@@ -286,20 +287,31 @@ def test_image_features():
 
 def test_images_flow(inputFolder):
     #1. extract facial landmarks
+    t1 = time.time()
     images_landmarks = extract_dlib_facial_points(inputFolder)
     print("landmarks shape: ", str(images_landmarks.shape))
     #2. extract features df
+    t2 = time.time()
     df = extract_features_forall(images_landmarks)
     print("features shape: ", str(df.shape))
     #print(df)
     #3. using correlation matrix to reduce dimension
-    corrDf = reduce_correlated_cols(df)
-    print("corr df shape: ", str(df.shape))
+    t3 = time.time()
+    corrDf = reduce_correlated_cols(df,)
+    print("corr df shape: ", str(corrDf.shape))
     #print(df)
     #4. reduce dimension with PCA
-    (pca, newDf) = dimension_reduction_pca(corrDf, components = 100)
+    t4 = time.time()
+    (pca, newDf) = dimension_reduction_pca(corrDf, 150)
     print("df after PCA shape: ", str(newDf.shape))
+    t5 = time.time()
     #print(newDf)
+    #timing report:
+    print("Timing Report:")
+    print("Extract landmarks:" + str(t2-t1))
+    print("Extract features:" + str(t3-t2))
+    print("Extract correlation:" + str(t4-t3))
+    print("Extract pca:" + str(t5-t4))
 
 #test_image_features()
 test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
