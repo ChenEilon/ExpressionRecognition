@@ -9,6 +9,8 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn import svm
+from sklearn.linear_model import LogisticRegression
 import time
 
 
@@ -266,8 +268,26 @@ def dimension_reduction_pca(df, components = 100):
 #######################################################################################
 
 # logistic regression
+def log_reg_classifier(imgs_features, imgs_lbls):
+    """
+    input - list of featurs list
+    output - logistic regression classifier
+    """
+    clf = LogisticRegression(C = 1, multi_class = 'multinomial', penalty = 'l1', solver = 'saga', tol = 0.1) #TODO check best C
+    return clf.fit(imgs_features, imgs_lbls)
+
 
 # SVM
+def svm_classifier(imgs_features, imgs_lbls):
+    """
+    input - list of featurs list
+    output - svm classifier
+    """
+    # Create a classifier: a support vector classifier
+    svm_classifier = svm.SVC(C = 1) #TODO check best C
+    # training
+    return svm_classifier.fit(imgs_features, imgs_lbls)
+    
 
 # KNN
 def knn_classifier(imgs_features, imgs_lbls):
@@ -342,17 +362,20 @@ def test_images_flow(inputFolder):
     print("Extract pca:" + str(t5-t4))
 
 
-def test_knn():
+def test_ml_algos():
     X = [[0],[1],[2],[3],[4],[5],[6],[7],[8]]
     y = [0,0,1,1,2,2,3,3,3]
     m_knn = knn_classifier(X,y)
+    m_svm = svm_classifier(X,y)
+    m_lin_log = log_reg_classifier(X,y)
     p1 = [0.5]
     p2 = [9]
-    print(m_knn.predict([p1]))
-    print(m_knn.predict([p2]))
-    
-
+    if(m_knn.predict([p1])[0] == m_svm.predict([p1])[0] == m_lin_log.predict([p1])[0] == 0):
+        if(m_knn.predict([p2])[0] == m_svm.predict([p2])[0] == m_lin_log.predict([p2])[0] == 3):
+            print("all good!")
+            return
+    print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
     
 #test_image_features()
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
-test_knn()
+test_ml_algos()
