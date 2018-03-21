@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.neighbors import KNeighborsClassifier
 import time
 
 
@@ -17,6 +18,7 @@ faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
+EMOTION_NUM = 8
 
 #######################################################################################
 ##############                   Math and transformations                  ############
@@ -266,6 +268,15 @@ def dimension_reduction_pca(df, components = 100):
 # SVM
 
 # KNN
+def knn_classifier(imgs_features, imgs_lbls):
+    """
+    input - list of featurs list
+    output - knn classifier
+    """
+    knn = KNeighborsClassifier(n_neighbors = EMOTION_NUM)
+    return knn.fit(imgs_features, imgs_lbls) 
+    
+    
 
 #######################################################################################
 ##############            TESTS                                            ############
@@ -328,5 +339,17 @@ def test_images_flow(inputFolder):
     print("Extract correlation:" + str(t4-t3))
     print("Extract pca:" + str(t5-t4))
 
+
+def test_knn():
+    X = [[0],[1],[2],[3],[4],[5],[6],[7],[8]]
+    y = [0,0,1,1,2,2,3,3,3]
+    m_knn = knn_classifier(X,y)
+    p1 = [0.5]
+    p2 = [9]
+    #print(m_knn.predict([p1]))
+    #print(m_knn.predict([p2]))
+    
+
+    
 #test_image_features()
 test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
