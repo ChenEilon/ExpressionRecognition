@@ -111,10 +111,12 @@ def angle_array(dot_m, dist_m):
                     angles.append(-1)
                     angles.append(-1)
                 else:
-                    angles.append(np.arccos(
-                        (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k])))
-                    angles.append(np.arccos(
-                        (dot_m[i, j] - dot_m[i, k] - dot_m[k, j] + dot_m[k, k]) / (dist_m[i, k] * dist_m[k, j])))
+                    angles.append(np.arccos(round(
+                        (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k]),
+                        15)))
+                    angles.append(np.arccos(round(
+                        (dot_m[i, j] - dot_m[i, k] - dot_m[k, j] + dot_m[k, k]) / (dist_m[i, k] * dist_m[k, j]),
+                        15)))
                     # angles.append(np.pi - angles[-1] - angles[-2])
     return np.array(angles)
 
@@ -302,12 +304,12 @@ def test_images_flow(inputFolder):
     #3. using correlation matrix to reduce dimension
     t3 = time.time()
     corrDf = reduce_correlated_cols(df)
-    #print("corr df shape: ", str(corrDf.shape))
-    print("no correlation here")
+    print("corr df shape: ", str(corrDf.shape))
+    #print("no correlation here")
     #print(df)
     #4. reduce dimension with PCA
     t4 = time.time()
-    m_pca = dimension_reduction_pca(df, 150)
+    m_pca = dimension_reduction_pca(corrDf, 150)
     print("df after PCA shape: ", m_pca.shape)
     t5 = time.time()
     #print(newDf)
@@ -319,4 +321,4 @@ def test_images_flow(inputFolder):
     print("Extract pca:" + str(t5-t4))
 
 #test_image_features()
-test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
+test_images_flow(r"C:\Santos\TAU\Final\facial-landmarks\images")
