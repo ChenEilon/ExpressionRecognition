@@ -166,10 +166,11 @@ def extract_dlib_facial_points(inputFolder):
     input - images folder name
     output - ndarray of images facial landmarks 
     """
+    wanted_landmarks = [i-1 for i in REF_POINTS]
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
     files = glob.glob("%s\\*"%inputFolder) #Get list of all images in inputFolder
-    faces_68_landmarks = []
+    faces_landmarks = []
     for f in files:
         if f.lower().endswith(".png") or f.lower().endswith(".jpg") or f.lower().endswith(".jpeg"): 
             # load the input image, resize it, and convert it to grayscale
@@ -185,8 +186,8 @@ def extract_dlib_facial_points(inputFolder):
                 shape = predictor(gray, rects[0])
                 shape = face_utils.shape_to_np(shape)
                 #faces_68_landmarks.append(shape)
-                faces_68_landmarks.append(shape[:15])#TODO swith
-    return np.array(faces_68_landmarks)
+                faces_landmarks.append(shape[wanted_landmarks])
+    return np.array(faces_landmarks)
                 
 
 #######################################################################################
