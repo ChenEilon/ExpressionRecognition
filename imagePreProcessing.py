@@ -16,9 +16,10 @@ faceDet_two = cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")
 faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
+REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 
 #######################################################################################
-##############                   Math and transfornatioms                  ############
+##############                   Math and transformations                  ############
 #######################################################################################
 def squared_distance(x,y):
     return (x[0]-y[0])**2+(x[1]-y[1])**2
