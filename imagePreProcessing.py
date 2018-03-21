@@ -115,7 +115,7 @@ def angle_array(dot_m, dist_m):
                         (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k])))
                     angles.append(np.arccos(
                         (dot_m[i, j] - dot_m[i, k] - dot_m[k, j] + dot_m[k, k]) / (dist_m[i, k] * dist_m[k, j])))
-                    angles.append(np.pi - angles[-1] - angles[-2])
+                    # angles.append(np.pi - angles[-1] - angles[-2])
     return np.array(angles)
 
 
@@ -232,7 +232,7 @@ def extract_features_forall(images):
             for k in range(j):
                 cols.append("angle_{2:d}_{1:d}_{0:d}".format(REF_POINTS[i], REF_POINTS[j], REF_POINTS[k]))
                 cols.append("angle_{1:d}_{2:d}_{0:d}".format(REF_POINTS[i], REF_POINTS[j], REF_POINTS[k]))
-                cols.append("angle_{2:d}_{0:d}_{1:d}".format(REF_POINTS[i], REF_POINTS[j], REF_POINTS[k]))
+                # cols.append("angle_{2:d}_{0:d}_{1:d}".format(REF_POINTS[i], REF_POINTS[j], REF_POINTS[k]))
     df = pd.DataFrame(features, columns=cols)
     return df
     
@@ -311,7 +311,7 @@ def test_images_flow(inputFolder):
     #print(df)
     #3. using correlation matrix to reduce dimension
     t3 = time.time()
-    #corrDf = reduce_correlated_cols(df,)
+    corrDf = reduce_correlated_cols(df)
     #print("corr df shape: ", str(corrDf.shape))
     print("no correlation here")
     #print(df)
