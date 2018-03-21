@@ -348,10 +348,11 @@ def test_knn():
     m_knn = knn_classifier(X,y)
     p1 = [0.5]
     p2 = [9]
-    #print(m_knn.predict([p1]))
-    #print(m_knn.predict([p2]))
+    print(m_knn.predict([p1]))
+    print(m_knn.predict([p2]))
     
 
     
 #test_image_features()
-test_images_flow(r"C:\Santos\TAU\Final\facial-landmarks\images")
+#test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
+test_knn()
