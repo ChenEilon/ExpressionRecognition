@@ -249,10 +249,12 @@ def dimension_reduction_pca(df, components = 100):
     # Standardizing the features
     x = StandardScaler().fit_transform(x)
     #dim reduction
-    pca = PCA(n_components=components)
-    principalComponents = pca.fit_transform(x)
-    principalDf = pd.DataFrame(data = principalComponents) #TODO disable and not return normally.
-    return (pca, principalDf)
+    pca = PCA(components)
+    print(pca)
+    projected = pca.fit_transform(x)
+    print(projected)
+    #principalDf = pd.DataFrame(data = projected) #TODO disable and not return normally.
+    return projected
     
     
 #######################################################################################
@@ -283,7 +285,7 @@ def test_image_features():
     features = extract_features_forall(images)
     print("features shape: ", str(features.shape))
     print(features)
-    (pca, df) = dimension_reduction_pca(features, 10)
+    (pca, df) = dimension_reduction_pca(features, 200)
     print("features after PCA shape: ", str(df.shape))
     print(df)
 
@@ -299,13 +301,14 @@ def test_images_flow(inputFolder):
     #print(df)
     #3. using correlation matrix to reduce dimension
     t3 = time.time()
-    corrDf = reduce_correlated_cols(df,)
-    print("corr df shape: ", str(corrDf.shape))
+    #corrDf = reduce_correlated_cols(df,)
+    #print("corr df shape: ", str(corrDf.shape))
+    print("no correlation here")
     #print(df)
     #4. reduce dimension with PCA
     t4 = time.time()
-    (pca, newDf) = dimension_reduction_pca(corrDf, 150)
-    print("df after PCA shape: ", str(newDf.shape))
+    m_pca = dimension_reduction_pca(df, 150)
+    print("df after PCA shape: ", m_pca.shape)
     t5 = time.time()
     #print(newDf)
     #timing report:
