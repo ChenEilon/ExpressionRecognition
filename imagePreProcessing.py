@@ -106,7 +106,7 @@ def angle_array(dot_m, dist_m):
         for j in range(i):
             for k in range(j):
                 #TODO change solution to devision by 0
-                if(dist_m[i, j] * dist_m[j, k] * dist_m[i, k]):
+                if not (dist_m[i, j] * dist_m[j, k] * dist_m[i, k]):
                     angles.append(-1)
                     angles.append(-1)
                     angles.append(-1)
