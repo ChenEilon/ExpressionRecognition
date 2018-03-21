@@ -226,13 +226,13 @@ def extract_features_forall(images):
     features = []
     for image in images:
         features.append(extract_features(image))
-    cols = ["dist_{1:d}_{0:d}".format(i, j) for i in range(len(images[0])) for j in range(i)]
-    for i in range(len(images[0])):
+    cols = ["dist_{1:d}_{0:d}".format(REF_POINTS[i], REF_POINTS[j]) for i in range(len(REF_POINTS)) for j in range(i)]
+    for i in range(len(REF_POINTS)):
         for j in range(i):
             for k in range(j):
-                cols.append("angle_{2:d}_{1:d}_{0:d}".format(i, j, k))
-                cols.append("angle_{1:d}_{2:d}_{0:d}".format(i, j, k))
-                cols.append("angle_{2:d}_{0:d}_{1:d}".format(i, j, k))
+                cols.append("angle_{2:d}_{1:d}_{0:d}".format(REF_POINTS[i], REF_POINTS[j], REF_POINTS[k]))
+                cols.append("angle_{1:d}_{2:d}_{0:d}".format(REF_POINTS[i], REF_POINTS[j], REF_POINTS[k]))
+                cols.append("angle_{2:d}_{0:d}_{1:d}".format(REF_POINTS[i], REF_POINTS[j], REF_POINTS[k]))
     df = pd.DataFrame(features, columns=cols)
     return df
     
