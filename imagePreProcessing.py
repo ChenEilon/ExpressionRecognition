@@ -20,7 +20,6 @@ faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
-EMOTION_NUM = 8
 EMOTIONS = ["neutral", "anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"] #Define emotions
 
 #######################################################################################
@@ -293,32 +292,32 @@ def dimension_reduction_pca(df, components = 100):
 #######################################################################################
 
 # logistic regression
-def log_reg_classifier(imgs_features, imgs_lbls):
+def log_reg_classifier(imgs_features, imgs_lbls, c=1):
     """
     input - list of featurs list
     output - logistic regression classifier
     """
-    clf = LogisticRegression(C = 1, penalty = 'l2') #TODO check best C
+    clf = LogisticRegression(C = c, penalty = 'l2') #TODO check best C
     return clf.fit(imgs_features, imgs_lbls)
 
 # SVM
-def svm_classifier(imgs_features, imgs_lbls):
+def svm_classifier(imgs_features, imgs_lbls, c=1):
     """
     input - list of featurs list
     output - svm classifier
     """
     # Create a classifier: a support vector classifier
-    svm_classifier = svm.SVC(C = 1) #TODO check best C
+    svm_classifier = svm.SVC(C = c) #TODO check best C
     # training
     return svm_classifier.fit(imgs_features, imgs_lbls)
     
 # KNN
-def knn_classifier(imgs_features, imgs_lbls):
+def knn_classifier(imgs_features, imgs_lbls, k=1):
     """
     input - list of featurs list
     output - knn classifier
     """
-    knn = KNeighborsClassifier(n_neighbors = EMOTION_NUM)
+    knn = KNeighborsClassifier(n_neighbors = k)
     return knn.fit(imgs_features, imgs_lbls) 
     
     
@@ -418,9 +417,6 @@ def test_ml_algos_on_ck(inputFolderCKData):
     print("KNN -  score on training data: ", m_knn.score(features_red))
     print("SVM -  score on traifeatures_df = extract_features_forall(facial_landmarks_data)ning data: ", m_svm.score(features_red))
     print("Linear logistic - score on training data: ", m_lin_log.score(features_red))
-
-    
-        
 
 #######################################################################################
 ##############            RUN                                              ############
