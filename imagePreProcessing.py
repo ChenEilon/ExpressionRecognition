@@ -359,20 +359,6 @@ def test_images_flow(inputFolder):
     print("Extract pca:" + str(t5-t4))
     return corrDf, m_pca
 
-def test_ml_algos():
-    X = [[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]]
-    y = [0,0,1,1,2,2,3,3,3,3,3]
-    m_knn = knn_classifier(X,y)
-    m_svm = svm_classifier(X,y)
-    m_lin_log = log_reg_classifier(X,y)
-    p1 = [0.5]
-    p2 = [9]
-    if(m_knn.predict([p1])[0] == m_svm.predict([p1])[0] == m_lin_log.predict([p1])[0] == 0):
-        if(m_knn.predict([p2])[0] == m_svm.predict([p2])[0] == m_lin_log.predict([p2])[0] == 3):
-            print("all good!")
-            return
-    print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
-    
 def test_ml_algos_on_ck(inputFolderCKData):
     print("Start testing...")
     (facial_landmarks_data, train_lbls) = dataset_from_ck(inputFolderCKData)
@@ -385,15 +371,15 @@ def test_ml_algos_on_ck(inputFolderCKData):
     print("ml algos training...")
     m_knn = knn_classifier(features_red,train_lbls,3)
     m_svm = svm_classifier(features_red,train_lbls)
-    m_lin_log = log_reg_classifier(features_red,train_lbls)
+    m_log_reg = log_reg_classifier(features_red,train_lbls)
     #test ml algos
     print("KNN -  score on training data: ", m_knn.score(features_red,train_lbls))
     print("SVM -  score on traifeatures_df = extract_features_forall(facial_landmarks_data)ning data: ", m_svm.score(features_red, train_lbls))
-    print("Linear logistic - score on training data: ", m_lin_log.score(features_red,train_lbls))
+    print("Logistic Regression - score on training data: ", m_log_reg.score(features_red,train_lbls))
 
 def find_best_params(inputFolderCKData):
     scoresSVM = []
-    scoresLinLog = []
+    scoresLogReg = []
     scoresKNN = []
     print("Start testing...")
     (facial_landmarks_data, facial_landmarks_lbls) = dataset_from_ck(inputFolderCKData)
@@ -415,22 +401,20 @@ def find_best_params(inputFolderCKData):
     Cs = [10**i for i in range(-5,6)]
     Ks = list(range(1,11))
     #train C:
-    print("svm & linlog C algos training...")
+    print("svm & logreg C algos training...")
     for c in Cs:
         m_svm = svm_classifier(train_data,train_lbls, c)
         scoresSVM.append(m_svm.score(validation_data,validation_lbls))
-        m_lin_log = log_reg_classifier(train_data,train_lbls,c)
-        scoresLinLog.append(m_lin_log.score(validation_data,validation_lbls))
+        m_log_reg = log_reg_classifier(train_data,train_lbls,c)
+        scoresLogReg.append(m_log_reg.score(validation_data,validation_lbls))
     #train K:
     print("KNN K algos training...")
     for k in Ks:
         m_knn = knn_classifier(train_data,train_lbls,k)
         scoresKNN.append(m_knn.score(validation_data,validation_lbls))
     save_plt_scores(Cs,"C",scoresSVM, "SVM scores","SVM scores as a function of C (on vaildation data)")
-    save_plt_scores(Cs,"C",scoresLinLog, "Linear Logistic scores","Linear Logistic scores as a function of C (on vaildation data)")
+    save_plt_scores(Cs,"C",scoresLogReg, "Logistic Regression scores","Logistic Regression scores as a function of C (on vaildation data)")
     save_plt_scores(Ks,"K",scoresKNN, "KNN scores","KNN scores as a function of K (on vaildation data)")
-    
-
 
 
 #######################################################################################
@@ -439,4 +423,4 @@ def find_best_params(inputFolderCKData):
     
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
-find_best_params(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
+#find_best_params(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
