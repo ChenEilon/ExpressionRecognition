@@ -63,15 +63,22 @@ def nparray_to_pandas_images(faces_68_landmarks):
     
 
 def dataset_from_ck(inputFolderCKData):
+    print("CK+ dataset preparation...")
     #create train_data and train_lbls
     train_lbls = []
-    facial_landmarks_data = []
-    emotion_len = 0
-    for e in range(len(EMOTIONS)):
-        facial_landmarks_data += extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[e])
-        for i in range(len(facial_landmarks_data)-emotion_len):
+    print("analyzing {0:s}...".format(EMOTIONS[0]))
+    facial_landmarks_data = extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[0])
+    emotion_len = facial_landmarks_data.shape[0]
+    for i in range(emotion_len):
+        train_lbls.append(0)
+    for e in range(1,len(EMOTIONS)):
+        print("analyzing {0:s}...".format(EMOTIONS[e]))
+        tmp = extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[e])
+        np.append(facial_landmarks_data, tmp)
+        for i in range(facial_landmarks_data.shape[0]-emotion_len):
             train_lbls.append(e)
-        emotion_len = len(facial_landmarks_data)
+        emotion_len = facial_landmarks_data.shape[0]
+    print("CK+ dataset ready!...")
     return (facial_landmarks_data, train_lbls)
 
 
@@ -104,7 +111,7 @@ def dist_matrix(dot_m):
             dist_m[j, i] = dist_m[i, j]
     return dist_m
 
-    def dist_array(dist_m):
+def dist_array(dist_m):
     """
     input - a distance matrix (output of dist_matrix method)
     output - an array of all of the distances, w/o duplicates
@@ -394,17 +401,24 @@ def test_ml_algos():
     print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
     
 def test_ml_algos_on_ck(inputFolderCKData):
+    print("Start testing...")
     (facial_landmarks_data, train_lbls) = dataset_from_ck(inputFolderCKData)
     features_df = extract_features_forall(facial_landmarks_data)
     #reduce dimensions
+    print("Dim reduction...")
     pca = dimension_reduction_pca(features_df, 100)
     features_red = pca.transform(features_df)
     #training ml algos
-    m_knn = knn_classifier(X,y)
-    m_svm = svm_classifier(X,y)
-    m_lin_log = log_reg_classifier(X,y)
+    print("ml algos training...")
+    m_knn = knn_classifier(features_red,train_lbls)
+    m_svm = svm_classifier(features_red,train_lbls)
+    m_lin_log = log_reg_classifier(features_red,train_lbls)
+    #test ml algos
+    print("KNN -  score on training data: ", m_knn.score(features_red))
+    print("SVM -  score on training data: ", m_svm.score(features_red))
+    print("Linear logistic - score on training data: ", m_lin_log.score(features_red))
 
-    #not done
+    
         
 
 #######################################################################################
@@ -414,3 +428,4 @@ def test_ml_algos_on_ck(inputFolderCKData):
 #test_image_features()
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos()
+test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
