@@ -64,17 +64,15 @@ def nparray_to_pandas_images(faces_68_landmarks):
 
 def dataset_from_ck(inputFolderCKData):
     #create train_data and train_lbls
-    train_data = []
     train_lbls = []
-    facial_landmarks = []
+    facial_landmarks_data = []
     emotion_len = 0
     for e in range(len(EMOTIONS)):
-        facial_landmarks += extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[e])
-        for i in range(len(facial_landmarks)-emotion_len):
+        facial_landmarks_data += extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[e])
+        for i in range(len(facial_landmarks_data)-emotion_len):
             train_lbls.append(e)
-        emotion_len = len(facial_landmarks)
-    features_df = extract_features_forall(facial_landmarks)
-    return features_df
+        emotion_len = len(facial_landmarks_data)
+    return (facial_landmarks_data, train_lbls)
 
 
 #######################################################################################
@@ -396,10 +394,16 @@ def test_ml_algos():
     print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
     
 def test_ml_algos_on_ck(inputFolderCKData):
-    features_df = dataset_from_ck(inputFolderCKData)
+    (facial_landmarks_data, train_lbls) = dataset_from_ck(inputFolderCKData)
+    features_df = extract_features_forall(facial_landmarks_data)
     #reduce dimensions
     pca = dimension_reduction_pca(features_df, 100)
-    #test ml algos
+    features_red = pca.transform(features_df)
+    #training ml algos
+    m_knn = knn_classifier(X,y)
+    m_svm = svm_classifier(X,y)
+    m_lin_log = log_reg_classifier(X,y)
+
     #not done
         
 
