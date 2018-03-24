@@ -222,7 +222,7 @@ def extract_dlib_facial_points(inputFolder):
 ##############            Extract features and reducing dimensions         ############
 #######################################################################################
 
-def reduce_correlated_cols(df, threshold=0.8):
+def reduce_correlated_cols(df, threshold=0.95):
     """
     input - df &threshold (if 1>|correlation|>threshold then dimension is reduced
     output - reduced df
