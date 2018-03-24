@@ -135,7 +135,7 @@ def angle_array(dot_m, dist_m):
                 if not (dist_m[i, j] * dist_m[j, k] * dist_m[i, k]):
                     angles.append(-1)
                     angles.append(-1)
-                    angles.append(-1)
+                    # angles.append(-1)
                 else:
                     angles.append(np.arccos(round(
                         (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k]),
@@ -246,7 +246,8 @@ def extract_features(image):
     #angles features
     angles = angle_array(dot_m, dist_m)
     #flatten and concat
-    return np.append(dists, angles)
+    features_vector = np.concatenate((dists, angles))
+    return features_vector
     
 def extract_features_forall(images):
     """
@@ -399,6 +400,7 @@ def test_ml_algos():
             print("all good!")
             return
     print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
+<<<<<<< HEAD
     
 def test_ml_algos_on_ck(inputFolderCKData):
     print("Start testing...")
@@ -420,6 +422,8 @@ def test_ml_algos_on_ck(inputFolderCKData):
 
     
         
+=======
+>>>>>>> 09221d616b5651f7a8d6eadc1fd9136c8b30482a
 
 #######################################################################################
 ##############            RUN                                              ############
@@ -428,4 +432,7 @@ def test_ml_algos_on_ck(inputFolderCKData):
 #test_image_features()
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos()
+<<<<<<< HEAD
 test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
+=======
+>>>>>>> 09221d616b5651f7a8d6eadc1fd9136c8b30482a
