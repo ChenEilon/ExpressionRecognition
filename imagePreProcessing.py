@@ -104,7 +104,7 @@ def dist_matrix(dot_m):
             dist_m[j, i] = dist_m[i, j]
     return dist_m
 
-    def dist_array(dist_m):
+def dist_array(dist_m):
     """
     input - a distance matrix (output of dist_matrix method)
     output - an array of all of the distances, w/o duplicates
@@ -128,7 +128,7 @@ def angle_array(dot_m, dist_m):
                 if not (dist_m[i, j] * dist_m[j, k] * dist_m[i, k]):
                     angles.append(-1)
                     angles.append(-1)
-                    angles.append(-1)
+                    # angles.append(-1)
                 else:
                     angles.append(np.arccos(round(
                         (dot_m[i, k] - dot_m[i, j] - dot_m[j, k] + dot_m[j, j]) / (dist_m[i, j] * dist_m[j, k]),
@@ -239,7 +239,8 @@ def extract_features(image):
     #angles features
     angles = angle_array(dot_m, dist_m)
     #flatten and concat
-    return np.append(dists, angles)
+    features_vector = np.concatenate((dists, angles))
+    return features_vector
     
 def extract_features_forall(images):
     """
@@ -392,20 +393,6 @@ def test_ml_algos():
             print("all good!")
             return
     print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
-    
-def test_ml_algos_on_ck(inputFolderCKData):
-    (facial_landmarks_data, train_lbls) = dataset_from_ck(inputFolderCKData)
-    features_df = extract_features_forall(facial_landmarks_data)
-    #reduce dimensions
-    pca = dimension_reduction_pca(features_df, 100)
-    features_red = pca.transform(features_df)
-    #training ml algos
-    m_knn = knn_classifier(X,y)
-    m_svm = svm_classifier(X,y)
-    m_lin_log = log_reg_classifier(X,y)
-
-    #not done
-        
 
 #######################################################################################
 ##############            RUN                                              ############
