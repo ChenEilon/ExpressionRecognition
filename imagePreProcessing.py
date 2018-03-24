@@ -415,9 +415,9 @@ def test_ml_algos_on_ck(inputFolderCKData):
     m_svm = svm_classifier(features_red,train_lbls)
     m_lin_log = log_reg_classifier(features_red,train_lbls)
     #test ml algos
-    print("KNN -  score on training data: ", m_knn.score(features_red))
-    print("SVM -  score on traifeatures_df = extract_features_forall(facial_landmarks_data)ning data: ", m_svm.score(features_red))
-    print("Linear logistic - score on training data: ", m_lin_log.score(features_red))
+    print("KNN -  score on training data: ", m_knn.score(features_red,train_lbls))
+    print("SVM -  score on traifeatures_df = extract_features_forall(facial_landmarks_data)ning data: ", m_svm.score(features_red, train_lbls))
+    print("Linear logistic - score on training data: ", m_lin_log.score(features_red,train_lbls))
 
     
         
