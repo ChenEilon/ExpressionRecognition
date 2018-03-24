@@ -400,7 +400,6 @@ def test_ml_algos():
             print("all good!")
             return
     print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
-<<<<<<< HEAD
     
 def test_ml_algos_on_ck(inputFolderCKData):
     print("Start testing...")
@@ -422,8 +421,6 @@ def test_ml_algos_on_ck(inputFolderCKData):
 
     
         
-=======
->>>>>>> 09221d616b5651f7a8d6eadc1fd9136c8b30482a
 
 #######################################################################################
 ##############            RUN                                              ############
@@ -432,7 +429,4 @@ def test_ml_algos_on_ck(inputFolderCKData):
 #test_image_features()
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos()
-<<<<<<< HEAD
 test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
-=======
->>>>>>> 09221d616b5651f7a8d6eadc1fd9136c8b30482a
