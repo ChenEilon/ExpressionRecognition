@@ -21,6 +21,7 @@ faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 EMOTION_NUM = 8
+EMOTIONS = ["neutral", "anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"] #Define emotions
 
 #######################################################################################
 ##############                   Math and transformations                  ############
@@ -60,6 +61,22 @@ def nparray_to_pandas_images(faces_68_landmarks):
     df = pd.DataFrame.from_records(faces_68_landmarks)
     return df
     
+
+def dataset_from_ck(inputFolderCKData):
+    #create train_data and train_lbls
+    train_data = []
+    train_lbls = []
+    facial_landmarks = []
+    emotion_len = 0
+    for e in range(len(EMOTIONS)):
+        facial_landmarks += extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[e])
+        for i in range(len(facial_landmarks)-emotion_len):
+            train_lbls.append(e)
+        emotion_len = len(facial_landmarks)
+    features_df = extract_features_forall(facial_landmarks)
+    return features_df
+
+
 #######################################################################################
 ##############                   Point Methods                             ############
 #######################################################################################
@@ -89,7 +106,7 @@ def dist_matrix(dot_m):
             dist_m[j, i] = dist_m[i, j]
     return dist_m
 
-def dist_array(dist_m):
+    def dist_array(dist_m):
     """
     input - a distance matrix (output of dist_matrix method)
     output - an array of all of the distances, w/o duplicates
@@ -273,9 +290,8 @@ def log_reg_classifier(imgs_features, imgs_lbls):
     input - list of featurs list
     output - logistic regression classifier
     """
-    clf = LogisticRegression(C = 1, multi_class = 'multinomial', penalty = 'l1', solver = 'saga', tol = 0.1) #TODO check best C
+    clf = LogisticRegression(C = 1, penalty = 'l2') #TODO check best C
     return clf.fit(imgs_features, imgs_lbls)
-
 
 # SVM
 def svm_classifier(imgs_features, imgs_lbls):
@@ -288,7 +304,6 @@ def svm_classifier(imgs_features, imgs_lbls):
     # training
     return svm_classifier.fit(imgs_features, imgs_lbls)
     
-
 # KNN
 def knn_classifier(imgs_features, imgs_lbls):
     """
@@ -318,6 +333,9 @@ def test_image_1():
     print("features shape: %s ", str(features.shape))
 
 def test_image_features():
+    """
+    outdated
+    """
     image1 =[(0,0),(0,1),(1,0),(1,1)]
     image2 =[(0,0),(0,1),(1,0),(2,2)]
     image3 =[(0,0),(1,1),(1,2),(3,1)]
@@ -361,10 +379,9 @@ def test_images_flow(inputFolder):
     print("Extract correlation:" + str(t4-t3))
     print("Extract pca:" + str(t5-t4))
 
-
 def test_ml_algos():
-    X = [[0],[1],[2],[3],[4],[5],[6],[7],[8]]
-    y = [0,0,1,1,2,2,3,3,3]
+    X = [[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]]
+    y = [0,0,1,1,2,2,3,3,3,3,3]
     m_knn = knn_classifier(X,y)
     m_svm = svm_classifier(X,y)
     m_lin_log = log_reg_classifier(X,y)
@@ -376,6 +393,18 @@ def test_ml_algos():
             return
     print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
     
+def test_ml_algos_on_ck(inputFolderCKData):
+    features_df = dataset_from_ck(inputFolderCKData)
+    #reduce dimensions
+    pca = dimension_reduction_pca(features_df, 100)
+    #test ml algos
+    #not done
+        
+
+#######################################################################################
+##############            RUN                                              ############
+#######################################################################################
+    
 #test_image_features()
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
-test_ml_algos()
+#test_ml_algos()
