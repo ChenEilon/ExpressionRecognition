@@ -79,11 +79,12 @@ def dataset_from_ck(inputFolderCKData):
     print("CK+ dataset ready!...")
     return (facial_landmarks_data, train_lbls)
 
-def save_plt_scores(params, nameP, scores, nameScores, title):
+def save_plt_scores(params, nameP, scores, nameScores, title, log_scale=True):
     fig = plt.figure()
     plt.grid(True)
     #axes = plt.gca()
-    plt.semilogx()
+    if log_scale:
+        plt.semilogx()
     plt.plot(params, scores)
     plt.axis([min(params) , max(params) , min(scores) - 0.01, max(scores) + 0.01])
     plt.ylabel(nameScores)
@@ -388,7 +389,7 @@ def find_best_params(inputFolderCKData):
     image_num = len(facial_landmarks_lbls)
     #reduce dimensions
     print("Dim reduction...")
-    pca = dimension_reduction_pca(features_df, 500)
+    pca = dimension_reduction_pca(features_df, 1600)
     features_red = pca.transform(features_df)
     #dividing to train and validation
     randIndxs = list(range(image_num))
@@ -398,7 +399,7 @@ def find_best_params(inputFolderCKData):
     validation_data = features_red[randIndxs[image_num//2:]]
     validation_lbls = facial_landmarks_lbls[randIndxs[image_num//2:]]
     #training ml algos
-    Cs = [10**i for i in range(-5,6)]
+    Cs = [10**i for i in range(-10,11)]
     Ks = list(range(1,11))
     #train C:
     print("svm & logreg C algos training...")
@@ -414,8 +415,37 @@ def find_best_params(inputFolderCKData):
         scoresKNN.append(m_knn.score(validation_data,validation_lbls))
     save_plt_scores(Cs,"C",scoresSVM, "SVM scores","SVM scores as a function of C (on vaildation data)")
     save_plt_scores(Cs,"C",scoresLogReg, "Logistic Regression scores","Logistic Regression scores as a function of C (on vaildation data)")
-    save_plt_scores(Ks,"K",scoresKNN, "KNN scores","KNN scores as a function of K (on vaildation data)")
+    save_plt_scores(Ks,"K",scoresKNN, "KNN scores","KNN scores as a function of K (on vaildation data)", False)
 
+def test_train_times(inputFolderCKData):
+    timesSVM = []
+    timesLogReg = []
+    timesKNN = []
+    print("Start testing...")
+    (facial_landmarks_data, facial_landmarks_lbls) = dataset_from_ck(inputFolderCKData)
+    facial_landmarks_lbls = np.array(facial_landmarks_lbls)
+    features_df = extract_features_forall(facial_landmarks_data)
+    Ds = [i for i in range(100, 1600, 100)]
+    print("Measuring times...")
+    for d in Ds:
+        pca = dimension_reduction_pca(features_df, d)
+        features_red = pca.transform(features_df)
+        t1 = time.time()
+        svm_classifier(features_red,facial_landmarks_lbls)
+        t2 = time.time()
+        log_reg_classifier(features_red,facial_landmarks_lbls)
+        t3 = time.time()
+        knn_classifier(features_red,facial_landmarks_lbls)
+        t4 = time.time()
+        timesSVM.append(t2-t1)
+        timesLogReg.append(t3-t2)
+        timesKNN.append(t4-t3)
+    # timesSVM = np.array(timesSVM) / len(features_red)
+    # timesLogReg = np.array(timesLogReg) / len(features_red)
+    # timesKNN = np.array(timesKNN) / len(features_red)
+    save_plt_scores(Ds,"d",timesSVM, "SVM train time","SVM train time as a function of d", False)
+    save_plt_scores(Ds,"d",timesLogReg, "Logistic Regression train time","Logistic Regression train time as a function of d", False)
+    save_plt_scores(Ds,"d",timesKNN, "KNN train time","KNN train time as a function of d", False)
 
 #######################################################################################
 ##############            RUN                                              ############
@@ -423,4 +453,4 @@ def find_best_params(inputFolderCKData):
     
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
-#find_best_params(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
+find_best_params(r"C:\Santos\TAU\Final\Datasets\CK+\sorted_set - CK+")
