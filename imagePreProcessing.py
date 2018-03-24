@@ -285,7 +285,7 @@ def dimension_reduction_pca(df, components = 100):
     projected = pca.fit_transform(x)
     print(projected)
     #principalDf = pd.DataFrame(data = projected) #TODO disable and not return normally.
-    return projected
+    return pca
     
     
 #######################################################################################
@@ -400,7 +400,6 @@ def test_ml_algos():
             print("all good!")
             return
     print("One of the predictor failed! most likely lin log.. we are sad. we want to sleep. or go to the Thailand")
-<<<<<<< HEAD
     
 def test_ml_algos_on_ck(inputFolderCKData):
     print("Start testing...")
@@ -417,13 +416,11 @@ def test_ml_algos_on_ck(inputFolderCKData):
     m_lin_log = log_reg_classifier(features_red,train_lbls)
     #test ml algos
     print("KNN -  score on training data: ", m_knn.score(features_red))
-    print("SVM -  score on training data: ", m_svm.score(features_red))
+    print("SVM -  score on traifeatures_df = extract_features_forall(facial_landmarks_data)ning data: ", m_svm.score(features_red))
     print("Linear logistic - score on training data: ", m_lin_log.score(features_red))
 
     
         
-=======
->>>>>>> 09221d616b5651f7a8d6eadc1fd9136c8b30482a
 
 #######################################################################################
 ##############            RUN                                              ############
@@ -432,7 +429,4 @@ def test_ml_algos_on_ck(inputFolderCKData):
 #test_image_features()
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos()
-<<<<<<< HEAD
 test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
-=======
->>>>>>> 09221d616b5651f7a8d6eadc1fd9136c8b30482a
