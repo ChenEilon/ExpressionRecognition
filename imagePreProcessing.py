@@ -72,8 +72,7 @@ def dataset_from_ck(inputFolderCKData):
         print("analyzing {0:s}...".format(EMOTIONS[e]))
         tmp = extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[e])
         facial_landmarks_data = np.concatenate((facial_landmarks_data, tmp))
-        for i in range(facial_landmarks_data.shape[0]-emotion_len):
-            train_lbls.append(e)
+        train_lbls += [e for i in range(facial_landmarks_data.shape[0]-emotion_len)]
         emotion_len = facial_landmarks_data.shape[0]
     print("CK+ dataset ready!...")
     return (facial_landmarks_data, train_lbls)
@@ -204,14 +203,12 @@ def extract_dlib_facial_points(inputFolder):
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             # detect faces in the grayscale image
             rects = detector(gray, 1)
-            # loop over the face detections
-            for (i, rect) in enumerate(rects): #commented cause we want 1 face per image
             # determine the facial landmarks for the face region, then
             # convert the facial landmark (x, y)-coordinates to a NumPy array
-                shape = predictor(gray, rects[0])
-                shape = face_utils.shape_to_np(shape)
-                #faces_68_landmarks.append(shape)
-                faces_landmarks.append(shape[wanted_landmarks])
+            shape = predictor(gray, rects[0])
+            shape = face_utils.shape_to_np(shape)
+            #faces_68_landmarks.append(shape)
+            faces_landmarks.append(shape[wanted_landmarks])
     return np.array(faces_landmarks)
                 
 
@@ -278,7 +275,7 @@ def dimension_reduction_pca(df, components = 100):
     x = StandardScaler().fit_transform(x)
     #dim reduction
     pca = PCA(components)
-    projected = pca.fit_transform(x)
+    pca.fit_transform(x)
     return pca
     
     
@@ -345,6 +342,7 @@ def test_images_flow(inputFolder):
     print("Extract features:" + str(t3-t2))
     print("Extract correlation:" + str(t4-t3))
     print("Extract pca:" + str(t5-t4))
+    return corrDf, m_pca
 
 def test_ml_algos():
     X = [[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]]
