@@ -73,7 +73,7 @@ def dataset_from_ck(inputFolderCKData):
     for e in range(1,len(EMOTIONS)):
         print("analyzing {0:s}...".format(EMOTIONS[e]))
         tmp = extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[e])
-        np.append(facial_landmarks_data, tmp)
+        facial_landmarks_data = np.concatenate((facial_landmarks_data, tmp))
         for i in range(facial_landmarks_data.shape[0]-emotion_len):
             train_lbls.append(e)
         emotion_len = facial_landmarks_data.shape[0]
