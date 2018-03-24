@@ -12,6 +12,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import svm
 from sklearn.linear_model import LogisticRegression
 import time
+import matplotlib.pyplot as plt
+import random
 
 
 faceDet = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
@@ -79,6 +81,19 @@ def dataset_from_ck(inputFolderCKData):
         emotion_len = facial_landmarks_data.shape[0]
     print("CK+ dataset ready!...")
     return (facial_landmarks_data, train_lbls)
+
+def save_plt_scores(params, nameP, scores, nameScores, title):
+    fig = plt.figure()
+    plt.grid(True)
+    #axes = plt.gca()
+    plt.semilogx()
+    plt.plot(params, scores)
+    plt.axis([min(params) , max(params) , min(scores) - 0.01, max(scores) + 0.01])
+    plt.ylabel(nameScores)
+    plt.xlabel(nameP)
+    plt.title(title)
+    #plt.show()
+    fig.savefig(title+'.png')
 
 
 #######################################################################################
@@ -314,7 +329,7 @@ def knn_classifier(imgs_features, imgs_lbls, k=1):
     input - list of featurs list
     output - knn classifier
     """
-    knn = KNeighborsClassifier(n_neighbors = k)
+    knn = KNeighborsClassifier(n_neighbors = k) #TODO check best k
     return knn.fit(imgs_features, imgs_lbls) 
     
     
@@ -372,11 +387,11 @@ def test_ml_algos_on_ck(inputFolderCKData):
     features_df = extract_features_forall(facial_landmarks_data)
     #reduce dimensions
     print("Dim reduction...")
-    pca = dimension_reduction_pca(features_df, 100)
+    pca = dimension_reduction_pca(features_df, 500)
     features_red = pca.transform(features_df)
     #training ml algos
     print("ml algos training...")
-    m_knn = knn_classifier(features_red,train_lbls)
+    m_knn = knn_classifier(features_red,train_lbls,3)
     m_svm = svm_classifier(features_red,train_lbls)
     m_lin_log = log_reg_classifier(features_red,train_lbls)
     #test ml algos
@@ -384,9 +399,52 @@ def test_ml_algos_on_ck(inputFolderCKData):
     print("SVM -  score on traifeatures_df = extract_features_forall(facial_landmarks_data)ning data: ", m_svm.score(features_red, train_lbls))
     print("Linear logistic - score on training data: ", m_lin_log.score(features_red,train_lbls))
 
+def find_best_params(inputFolderCKData):
+    scoresSVM = []
+    scoresLinLog = []
+    scoresKNN = []
+    print("Start testing...")
+    (facial_landmarks_data, facial_landmarks_lbls) = dataset_from_ck(inputFolderCKData)
+    facial_landmarks_lbls = np.array(facial_landmarks_lbls)
+    features_df = extract_features_forall(facial_landmarks_data)
+    image_num = len(facial_landmarks_lbls)
+    #reduce dimensions
+    print("Dim reduction...")
+    pca = dimension_reduction_pca(features_df, 500)
+    features_red = pca.transform(features_df)
+    #dividing to train and validation
+    randIndxs = list(range(image_num))
+    random.shuffle(randIndxs)
+    train_data = features_red[randIndxs[:image_num//2]]
+    train_lbls = facial_landmarks_lbls[randIndxs[:image_num//2]]
+    validation_data = features_red[randIndxs[image_num//2:]]
+    validation_lbls = facial_landmarks_lbls[randIndxs[image_num//2:]]
+    #training ml algos
+    Cs = [10**i for i in range(-5,6)]
+    Ks = list(range(1,11))
+    #train C:
+    print("svm & linlog C algos training...")
+    for c in Cs:
+        m_svm = svm_classifier(train_data,train_lbls, c)
+        scoresSVM.append(m_svm.score(validation_data,validation_lbls))
+        m_lin_log = log_reg_classifier(train_data,train_lbls,c)
+        scoresLinLog.append(m_lin_log.score(validation_data,validation_lbls))
+    #train K:
+    print("KNN K algos training...")
+    for k in Ks:
+        m_knn = knn_classifier(train_data,train_lbls,k)
+        scoresKNN.append(m_knn.score(validation_data,validation_lbls))
+    save_plt_scores(Cs,"C",scoresSVM, "SVM scores","SVM scores as a function of C (on vaildation data)")
+    save_plt_scores(Cs,"C",scoresLinLog, "Linear Logistic scores","Linear Logistic scores as a function of C (on vaildation data)")
+    save_plt_scores(Ks,"K",scoresKNN, "KNN scores","KNN scores as a function of K (on vaildation data)")
+    
+
+
+
 #######################################################################################
 ##############            RUN                                              ############
 #######################################################################################
     
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
-test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
+#test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
+find_best_params(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
