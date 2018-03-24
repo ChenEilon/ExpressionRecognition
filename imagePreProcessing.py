@@ -223,9 +223,11 @@ def reduce_correlated_cols(df, threshold=0.8):
     output - reduced df
     """
     corr = df.corr()
-    corr_cols = [corr.columns[i] for i in range(len(corr)) for j in range(i) if abs(corr.iloc[i, j]) >= threshold]
-    df = df.drop(corr_cols, axis=1)
-    return df
+    corr = corr * np.fromfunction(lambda i, j: i > j, corr.shape)
+    corr_cols = (corr > threshold).sum(axis=1)
+    corr_cols = corr_cols[corr_cols > 0].axes[0].tolist()
+    ret = df.drop(corr_cols, axis=1)
+    return ret
 
 def extract_features(image):
     """
