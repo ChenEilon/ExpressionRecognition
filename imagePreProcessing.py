@@ -280,10 +280,7 @@ def dimension_reduction_pca(df, components = 100):
     x = StandardScaler().fit_transform(x)
     #dim reduction
     pca = PCA(components)
-    print(pca)
     projected = pca.fit_transform(x)
-    print(projected)
-    #principalDf = pd.DataFrame(data = projected) #TODO disable and not return normally.
     return pca
     
     
@@ -326,37 +323,6 @@ def knn_classifier(imgs_features, imgs_lbls, k=1):
 ##############            TESTS                                            ############
 #######################################################################################
         
-
-def test_image_1():
-    """
-    outdated
-    """
-    inputFolder = "./images/"
-    outputFolder = "./out/"
-    images_landmarks = extract_dlib_facial_points(inputFolder)
-    print("landmarks shape: ", str(images_landmarks.shape))
-    #f = nparray_to_pandas_images(images_landmarks)
-    features = extract_features(images_landmarks)
-    print("features shape: %s ", str(features.shape))
-
-def test_image_features():
-    """
-    outdated
-    """
-    image1 =[(0,0),(0,1),(1,0),(1,1)]
-    image2 =[(0,0),(0,1),(1,0),(2,2)]
-    image3 =[(0,0),(1,1),(1,2),(3,1)]
-    images = []
-    images.append(image1)
-    images.append(image2)
-    images.append(image3)
-    features = extract_features_forall(images)
-    print("features shape: ", str(features.shape))
-    print(features)
-    (pca, df) = dimension_reduction_pca(features, 200)
-    print("features after PCA shape: ", str(df.shape))
-    print(df)
-
 def test_images_flow(inputFolder):
     #1. extract facial landmarks
     t1 = time.time()
@@ -422,7 +388,5 @@ def test_ml_algos_on_ck(inputFolderCKData):
 ##############            RUN                                              ############
 #######################################################################################
     
-#test_image_features()
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
-#test_ml_algos()
 test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
