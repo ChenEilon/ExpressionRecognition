@@ -64,12 +64,10 @@ def nparray_to_pandas_images(faces_68_landmarks):
 def dataset_from_ck(inputFolderCKData):
     print("CK+ dataset preparation...")
     #create train_data and train_lbls
-    train_lbls = []
     print("analyzing {0:s}...".format(EMOTIONS[0]))
     facial_landmarks_data = extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[0])
     emotion_len = facial_landmarks_data.shape[0]
-    for i in range(emotion_len):
-        train_lbls.append(0)
+    train_lbls = [0 for i in range(emotion_len)]
     for e in range(1,len(EMOTIONS)):
         print("analyzing {0:s}...".format(EMOTIONS[e]))
         tmp = extract_dlib_facial_points(inputFolderCKData + "\\" + EMOTIONS[e])
@@ -337,14 +335,10 @@ def test_images_flow(inputFolder):
     t3 = time.time()
     corrDf = reduce_correlated_cols(df)
     print("corr df shape: ", str(corrDf.shape))
-    #print("no correlation here")
-    #print(df)
     #4. reduce dimension with PCA
     t4 = time.time()
     m_pca = dimension_reduction_pca(corrDf, 150)
-    print("df after PCA shape: ", m_pca.shape)
     t5 = time.time()
-    #print(newDf)
     #timing report:
     print("Timing Report:")
     print("Extract landmarks:" + str(t2-t1))
