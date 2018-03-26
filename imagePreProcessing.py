@@ -13,6 +13,7 @@ from sklearn import svm
 from sklearn.linear_model import LogisticRegression
 import time
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import random
 
 
@@ -446,6 +447,22 @@ def test_train_times(inputFolderCKData):
     save_plt_scores(Ds,"d",timesSVM, "SVM train time","SVM train time as a function of d", False)
     save_plt_scores(Ds,"d",timesLogReg, "Logistic Regression train time","Logistic Regression train time as a function of d", False)
     save_plt_scores(Ds,"d",timesKNN, "KNN train time","KNN train time as a function of d", False)
+
+def plot_3_principal_components(inputFolderCKData):
+    plot_title = "3 Principal Components Scatter"
+    colors_dict = {0:'tab:blue', 1:'tab:orange', 2:'tab:green', 3:'tab:red', 4:'tab:purple', 5:'tab:brown', 6:'tab:pink', 7:'tab:gray', 8:'tab:olive', 9:'tab:cyan'}
+    (facial_landmarks_data, facial_landmarks_lbls) = dataset_from_ck(inputFolderCKData)
+    facial_landmarks_lbls = np.array(facial_landmarks_lbls)
+    features_df = extract_features_forall(facial_landmarks_data)
+    pca = dimension_reduction_pca(features_df, 3)
+    features_red = pca.transform(features_df)
+    features_red = features_red.transpose()
+    colors = np.array([colors_dict[x] for x in facial_landmarks_lbls])
+    fig = plt.figure(figsize=(20, 20))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(features_red[0], features_red[1], features_red[2], c=colors)
+    ax.title(plot_title)
+    fig.savefig(plot_title+'.png')
 
 #######################################################################################
 ##############            RUN                                              ############
