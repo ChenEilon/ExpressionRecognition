@@ -23,7 +23,7 @@ faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
-EMOTIONS = ["neutral", "anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"] #Define emotions
+EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger", "contempt"] #Define emotions
 
 #######################################################################################
 ##############                   Math and transformations                  ############
@@ -63,7 +63,6 @@ def nparray_to_pandas_images(faces_68_landmarks):
     df = pd.DataFrame.from_records(faces_68_landmarks)
     return df
     
-
 def dataset_from_ck(inputFolderCKData):
     print("CK+ dataset preparation...")
     #create train_data and train_lbls
@@ -94,7 +93,18 @@ def save_plt_scores(params, nameP, scores, nameScores, title, log_scale=True):
     #plt.show()
     fig.savefig(title+'.png')
 
+def dataset_from_affectnet(trainingCsvPath):
+    """
+    problem with affectnet landmarks...
+    """
+    data_df = pd.read_csv(trainingCsvPath)
+    df_filtered = data_df.query('expression<8')
+    landmarks = (df_filtered[['facial_landmarks']].values).flatten()
+    labels = df_filtered[['expression']].values
+    facial_landmarks_data = [np.reshape(i.split(";"),(68,2)) for i in landmarks]
+    return (facial_landmarks_data, labels.flatten())
 
+    
 #######################################################################################
 ##############                   Point Methods                             ############
 #######################################################################################
@@ -202,6 +212,23 @@ def detect_faces_CascadeClassifier(inputFolder,outputFolder):
                pass #If error, pass file
         filenumber += 1 #Increment image number
 
+def image_to_landmarks(image_path, detector, predictor):
+    """assuming an image"""
+    # load the input image, resize it, and convert it to grayscale
+    image = cv2.imread(image_path)
+    image = imutils.resize(image, width=350)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # detect faces in the grayscale image
+    rects = detector(gray, 1)
+    # determine the facial landmarks for the face region, then
+    # convert the facial landmark (x, y)-coordinates to a NumPy array
+    shape = predictor(gray, rects[0])
+    shape = face_utils.shape_to_np(shape)
+    #faces_68_landmarks.append(shape)
+    return shape
+
+
+        
 def extract_dlib_facial_points(inputFolder):
     """
     input - images folder name
@@ -214,21 +241,33 @@ def extract_dlib_facial_points(inputFolder):
     faces_landmarks = []
     for f in files:
         if f.lower().endswith(".png") or f.lower().endswith(".jpg") or f.lower().endswith(".jpeg"): 
-            # load the input image, resize it, and convert it to grayscale
-            image = cv2.imread(f)
-            image = imutils.resize(image, width=500)
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            # detect faces in the grayscale image
-            rects = detector(gray, 1)
-            # determine the facial landmarks for the face region, then
-            # convert the facial landmark (x, y)-coordinates to a NumPy array
-            shape = predictor(gray, rects[0])
-            shape = face_utils.shape_to_np(shape)
-            #faces_68_landmarks.append(shape)
+            shape = image_to_landmarks(f, detector, predictor)
             faces_landmarks.append(shape[wanted_landmarks])
     return np.array(faces_landmarks)
                 
 
+def sort_sample_affectnet(inputFolder, csvPathAffectnet):
+    """
+    csv: 'image_name', 'expression', '68_landmarks'
+    """
+    #wanted_landmarks = [i-1 for i in REF_POINTS]
+    detector = dlib.get_frontal_face_detector()
+    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+    data_df = pd.read_csv(csvPathAffectnet)
+    landmarks = []
+    folders = glob.glob(".\\" + inputFolder + "\\*") #Returns a list of all folders with participant numbers
+    for folder in folders:
+        files = glob.glob(folder + "\\*")
+        for f in files:
+            shape = image_to_landmarks(f, detector, predictor)
+            img_name = (f.split("\\"))[-1]
+            landmarks.append([img_name, shape])
+    landmarks_df = pd.DataFrame(landmarks, columns = ['image_name','landmarks'])
+    data_df.join(landmarks_df.set_index('image_name'), on='image_name')
+    data_df.to_csv('out.csv')
+    
+
+                
 #######################################################################################
 ##############            Extract features and reducing dimensions         ############
 #######################################################################################
@@ -463,6 +502,15 @@ def plot_3_principal_components(inputFolderCKData):
     ax.scatter(features_red[0], features_red[1], features_red[2], c=colors)
     fig.savefig(plot_title+'.png')
 
+
+def test_train_NN_times(inputFolderCKData):
+    print("Start testing...")
+    (facial_landmarks_data, facial_landmarks_lbls) = dataset_from_ck(inputFolderCKData)
+    facial_landmarks_lbls = np.array(facial_landmarks_lbls)
+    features_df = extract_features_forall(facial_landmarks_data)
+    features_df["landmarks"] = facial_landmarks_lbls
+
+
 #######################################################################################
 ##############            RUN                                              ############
 #######################################################################################
@@ -470,3 +518,4 @@ def plot_3_principal_components(inputFolderCKData):
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
 #plot_3_principal_components(r"C:\Santos\TAU\Final\Datasets\CK+\sorted_set - CK+")
+#sort_sample_affectnet(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\Manually_Annotated\FirstTrain", r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\\Manually_Annotated\FirstTrain.csv")
