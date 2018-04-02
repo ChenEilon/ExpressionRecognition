@@ -508,7 +508,12 @@ def test_train_NN_times(inputFolderCKData):
     (facial_landmarks_data, facial_landmarks_lbls) = dataset_from_ck(inputFolderCKData)
     facial_landmarks_lbls = np.array(facial_landmarks_lbls)
     features_df = extract_features_forall(facial_landmarks_data)
-    features_df["landmarks"] = facial_landmarks_lbls
+    features_df["expression"] = facial_landmarks_lbls
+    for i in range(len(EMOTIONS)):
+        features_df["is_{0:s}".format(EMOTIONS[i])] = (features_df["expression"] == i)
+    features_df = features_df.drop("expression", axis=1)
+    #features_df.to_csv("face.csv")
+    return features_df
 
 
 #######################################################################################
