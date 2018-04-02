@@ -461,7 +461,6 @@ def plot_3_principal_components(inputFolderCKData):
     fig = plt.figure(figsize=(20, 20))
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(features_red[0], features_red[1], features_red[2], c=colors)
-    ax.title(plot_title)
     fig.savefig(plot_title+'.png')
 
 #######################################################################################
@@ -470,4 +469,4 @@ def plot_3_principal_components(inputFolderCKData):
     
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
-find_best_params(r"C:\Santos\TAU\Final\Datasets\CK+\sorted_set - CK+")
+#plot_3_principal_components(r"C:\Santos\TAU\Final\Datasets\CK+\sorted_set - CK+")
