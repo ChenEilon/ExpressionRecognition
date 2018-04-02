@@ -216,12 +216,16 @@ def image_to_landmarks(image_path, detector, predictor):
     """assuming an image"""
     # load the input image, resize it, and convert it to grayscale
     image = cv2.imread(image_path)
+    if image is None:
+        return []
     image = imutils.resize(image, width=350)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # detect faces in the grayscale image
     rects = detector(gray, 1)
     # determine the facial landmarks for the face region, then
     # convert the facial landmark (x, y)-coordinates to a NumPy array
+    if len(rects)==0:
+        return []
     shape = predictor(gray, rects[0])
     shape = face_utils.shape_to_np(shape)
     #faces_68_landmarks.append(shape)
@@ -255,7 +259,7 @@ def sort_sample_affectnet(inputFolder, csvPathAffectnet):
     predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
     data_df = pd.read_csv(csvPathAffectnet)
     landmarks = []
-    folders = glob.glob(".\\" + inputFolder + "\\*") #Returns a list of all folders with participant numbers
+    folders = glob.glob(inputFolder + "\\*") #Returns a list of all folders with participant numbers
     for folder in folders:
         files = glob.glob(folder + "\\*")
         for f in files:
@@ -263,7 +267,7 @@ def sort_sample_affectnet(inputFolder, csvPathAffectnet):
             img_name = (f.split("\\"))[-1]
             landmarks.append([img_name, shape])
     landmarks_df = pd.DataFrame(landmarks, columns = ['image_name','landmarks'])
-    data_df.join(landmarks_df.set_index('image_name'), on='image_name')
+    data_df = data_df.join(landmarks_df.set_index('image_name'), on='image_name')
     data_df.to_csv('out.csv')
     
 
@@ -518,4 +522,4 @@ def test_train_NN_times(inputFolderCKData):
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
 #plot_3_principal_components(r"C:\Santos\TAU\Final\Datasets\CK+\sorted_set - CK+")
-#sort_sample_affectnet(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\Manually_Annotated\FirstTrain", r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\\Manually_Annotated\FirstTrain.csv")
+sort_sample_affectnet(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\Manually_Annotated\FirstTrain", r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\\Manually_Annotated\FirstTrain.csv")
