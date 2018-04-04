@@ -264,11 +264,11 @@ def sort_sample_affectnet(inputFolder, csvPathAffectnet):
         files = glob.glob(folder + "\\*")
         for f in files:
             shape = image_to_landmarks(f, detector, predictor)
-            shape = shape.flatten()
-            img_name = (f.split("\\"))[-1]
-            tmp = [img_name] + list(shape)
-            landmarks.append(tmp)
-    landmarks_df = pd.DataFrame(landmarks, columns = ['image_name','landmarks'])
+            shape = list(shape.flatten())
+            img_name = [(f.split("\\"))[-1]]
+            landmarks.append(img_name + shape)
+    cols = ["image_name"] + ["x_{0:d}".format(i//2) if i%2==0 else "y_{0:d}".format(i//2) for i in range(2, 69*2)]
+    landmarks_df = pd.DataFrame(landmarks, columns=cols)
     data_df = data_df.join(landmarks_df.set_index('image_name'), on='image_name')
     data_df.to_csv('out.csv')
     
