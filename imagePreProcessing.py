@@ -323,7 +323,7 @@ def extract_features(image):
     angles = angle_array(dot_m, dist_m)
     #flatten and concat
     features_vector = np.concatenate((dists, angles))
-    return features_vector
+    return np.around(features_vector, decimals = 2)
     
 def extract_features_forall(images):
     """
