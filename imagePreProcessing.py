@@ -293,7 +293,7 @@ def csv_to_features(csvPath):
     images_df = np.reshape(images_df.values.astype(int), (len(images_df), len(REF_POINTS), 2))
     #extract features
     features_df = extract_features_forall(images_df)
-    features_df["expression"] = df_filtered["expression"]
+    features_df["expression"] = df_filtered["expression"].values
     add_expression_dummies(features_df)
     features_df.to_csv("features_FirstSample.csv")
     return features_df
