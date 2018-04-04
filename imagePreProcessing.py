@@ -23,7 +23,8 @@ faceDet_three = cv2.CascadeClassifier("haarcascade_frontalface_alt.xml")
 faceDet_four = cv2.CascadeClassifier("haarcascade_frontalface_alt_tree.xml")
 
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
-EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger", "contempt"] #Define emotions
+#EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger", "contempt"] #Define emotions
+EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger"]
 
 #######################################################################################
 ##############                   Math and transformations                  ############
@@ -283,7 +284,7 @@ def csv_to_features(csvPath):
     out - features dataframe
     """
     data_df = pd.read_csv(csvPath)
-    df_filtered = data_df.query('expression<8').dropna() #filter out non-faces
+    df_filtered = data_df.query('expression<7').dropna() #filter out non-faces
     #ndarray of wanted landmarks (row per image)
     col_names = []
     for i in REF_POINTS:
