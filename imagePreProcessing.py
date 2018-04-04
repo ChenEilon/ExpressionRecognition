@@ -272,7 +272,27 @@ def sort_sample_affectnet(inputFolder, csvPathAffectnet):
     data_df = data_df.join(landmarks_df.set_index('image_name'), on='image_name')
     data_df.to_csv('out.csv')
     
-
+def csv_to_features(csvPath):
+    """
+    in - csv from sort_sample_affectnet
+    out - features dataframe
+    """
+    data_df = data_df = pd.read_csv(csvPath)
+    df_filtered = data_df.query('expression<8') #filter out non-faces
+    #ndarray of wanted landmarks (row per image)
+    col_names = []
+    for i in REF_POINTS:
+        x = "x_{0:d}".format(i-1)
+        y = "y_{0:d}".format(i-1)
+        col_names.append(x)
+        col_names.append(y)
+    images_df = df_filtered[col_names]
+    images_df = np.reshape(images_df.values.astype(int), (len(images_df), len(REF_POINTS), 2))
+    #extract features
+    features_df = extract_features_forall(images_df)
+    features_df.to_csv("features_FirstSample.csv")
+    return features_df
+    
                 
 #######################################################################################
 ##############            Extract features and reducing dimensions         ############
