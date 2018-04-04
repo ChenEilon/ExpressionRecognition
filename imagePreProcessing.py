@@ -271,25 +271,30 @@ def sort_sample_affectnet(inputFolder, csvPathAffectnet):
     landmarks_df = pd.DataFrame(landmarks, columns=cols)
     data_df = data_df.join(landmarks_df.set_index('image_name'), on='image_name')
     data_df.to_csv('out.csv')
-    
+
+def add_expression_dummies(features_df):
+    for i in range(len(EMOTIONS)):
+        features_df["is_{0:s}".format(EMOTIONS[i])] = (features_df["expression"] == i)
+    features_df.drop("expression", axis=1, inplace=True)
+
 def csv_to_features(csvPath):
     """
     in - csv from sort_sample_affectnet
     out - features dataframe
     """
-    data_df = data_df = pd.read_csv(csvPath)
-    df_filtered = data_df.query('expression<8') #filter out non-faces
+    data_df = pd.read_csv(csvPath)
+    df_filtered = data_df.query('expression<8').dropna() #filter out non-faces
     #ndarray of wanted landmarks (row per image)
     col_names = []
     for i in REF_POINTS:
-        x = "x_{0:d}".format(i-1)
-        y = "y_{0:d}".format(i-1)
-        col_names.append(x)
-        col_names.append(y)
+        col_names.append("x_{0:d}".format(i))
+        col_names.append("y_{0:d}".format(i))
     images_df = df_filtered[col_names]
     images_df = np.reshape(images_df.values.astype(int), (len(images_df), len(REF_POINTS), 2))
     #extract features
     features_df = extract_features_forall(images_df)
+    features_df["expression"] = df_filtered["expression"]
+    add_expression_dummies(features_df)
     features_df.to_csv("features_FirstSample.csv")
     return features_df
     
