@@ -251,27 +251,36 @@ def extract_dlib_facial_points(inputFolder):
     return np.array(faces_landmarks)
                 
 
-def sort_sample_affectnet(inputFolder, csvPathAffectnet):
+def sort_sample_affectnet(inputFolder, csvPathAffectnet, start=0, count=10000):
     """
     csv: 'image_name', 'expression', '68_landmarks'
     """
-    #wanted_landmarks = [i-1 for i in REF_POINTS]
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
     data_df = pd.read_csv(csvPathAffectnet)
     landmarks = []
-    folders = glob.glob(inputFolder + "\\*") #Returns a list of all folders with participant numbers
-    for folder in folders:
-        files = glob.glob(folder + "\\*")
-        for f in files:
-            shape = image_to_landmarks(f, detector, predictor)
-            shape = list(np.array(shape).flatten())
-            img_name = [(f.split("\\"))[-1]]
-            landmarks.append(img_name + shape)
-    cols = ["image_name"] + ["x_{0:d}".format(i//2) if i%2==0 else "y_{0:d}".format(i//2) for i in range(2, 69*2)]
-    landmarks_df = pd.DataFrame(landmarks, columns=cols)
-    data_df = data_df.join(landmarks_df.set_index('image_name'), on='image_name')
-    data_df.to_csv('out.csv')
+    # Gal's lines, do not touch!
+    # folders = glob.glob(inputFolder + "\\*") #Returns a list of all folders with participant numbers
+    # for folder in folders:
+    #     files = glob.glob(folder + "\\*")
+    #     for f in files:
+    #         shape = image_to_landmarks(f, detector, predictor)
+    #         shape = list(np.array(shape).flatten())
+    #         img_name = [(f.split("\\"))[-1]]
+    #         landmarks.append(img_name + shape)
+    for i in range(start, start+count):
+        f = "{0}\\{1}\\{2}".format(inputFolder, data_df.loc[i, "subDirectory"], data_df.loc[i, "filePath"])
+        shape = image_to_landmarks(f, detector, predictor)
+        shape = list(np.array(shape).flatten())
+        img_name = [(f.split("\\"))[-1]]
+        landmarks.append(img_name + shape)
+    cols = ["filePath"] + ["x_{0:d}".format(i//2) if i%2==0 else "y_{0:d}".format(i//2) for i in range(2, 69*2)]
+    landmarks_df = pd.DataFrame(landmarks, columns=cols, index=np.arange(start, start+count))
+    if start == 0:
+        data_df = data_df.merge(landmarks_df, on="filePath", how="left")
+    else:
+        data_df.update(landmarks_df)
+    data_df.to_csv('affectnet_landmarks.csv', index=False)
 
 def add_expression_dummies(features_df):
     for i in range(len(EMOTIONS)):
@@ -555,4 +564,5 @@ def test_train_NN_times(inputFolderCKData):
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
 #plot_3_principal_components(r"C:\Santos\TAU\Final\Datasets\CK+\sorted_set - CK+")
-sort_sample_affectnet(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\Manually_Annotated\FirstTrain", r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\\Manually_Annotated\FirstTrain.csv")
+#sort_sample_affectnet(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\Manually_Annotated\FirstTrain", r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\\Manually_Annotated\FirstTrain.csv")
+csv_to_features(r"C:\Users\Santos\Documents\GitHub\ExpressionRecognition\FirstTrain\out.csv")
