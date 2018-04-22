@@ -278,9 +278,10 @@ def sort_sample_affectnet(inputFolder, csvPathAffectnet, start=0, count=10000):
     landmarks_df = pd.DataFrame(landmarks, columns=cols, index=np.arange(start, start+count))
     if start == 0:
         data_df = data_df.merge(landmarks_df, on="filePath", how="left")
+        data_df.to_csv('affectnet_landmarks.csv', index=False)
     else:
         data_df.update(landmarks_df)
-    data_df.to_csv('affectnet_landmarks.csv', index=False)
+        data_df.to_csv(csvPathAffectnet, index=False)
 
 def add_expression_dummies(features_df):
     for i in range(len(EMOTIONS)):
