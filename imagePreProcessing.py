@@ -350,9 +350,10 @@ def extract_features_forall(images):
     output - dataframe of images features
     """
     features = []
+    cols = []
     for image in images:
         features.append(extract_features(image))
-    cols = ["dist_{1:d}_{0:d}".format(REF_POINTS[i], REF_POINTS[j]) for i in range(len(REF_POINTS)) for j in range(i)]
+    #cols = ["dist_{1:d}_{0:d}".format(REF_POINTS[i], REF_POINTS[j]) for i in range(len(REF_POINTS)) for j in range(i)]
     for i in range(len(REF_POINTS)):
         for j in range(i):
             for k in range(j):
