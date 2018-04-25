@@ -9,11 +9,18 @@ from keras.layers import *
 from keras.optimizers import SGD
 import numpy as np
 import os
+import sys
+sys.path.insert(0, "..")
+import imagePreProcessing
 
 
-def data_preprocess(dirname, filename="face.csv"):
+def data_preprocess(dir_path, file_prefix="features_affectnet_landmarks"):
+    filenames = [entry.name for entry in os.scandir(dir_path) if
+                 entry.name.endswith(".csv") and entry.name.startswith(file_prefix)]
+    dfs = [pd.read_csv(os.path.join(dir_path, f)) for f in filenames]
+
     # Load training data set from CSV file
-    data_df = pd.read_csv(os.path.join(dirname, filename))
+    data_df = pd.concat(dfs, ignore_index=True)
 
     # Data needs to be scaled to a small range like 0 to 1 for the neural
     # network to work well.
@@ -26,11 +33,11 @@ def data_preprocess(dirname, filename="face.csv"):
     scaled_df = pd.DataFrame(scaled, columns=data_df.columns.values)
 
     # Save scaled data dataframes to new CSV files
-    scaled_df.to_csv(os.path.join(dirname, "scaled_{0}".format(filename)), index=False)
+    scaled_df.to_csv(os.path.join(dir_path, "scaled_{0}".format(file_prefix)), index=False)
 
     # Save scaling data
     scaling_data = pd.DataFrame([scaler.scale_, scaler.min_], columns=data_df.columns.values)
-    scaling_data.to_csv(os.path.join(dirname, "scaling_data_{0}".format(filename)), index=False)
+    scaling_data.to_csv(os.path.join(dir_path, "scaling_data_{0}".format(file_prefix)), index=False)
 
     return scaled_df, scaling_data
 
