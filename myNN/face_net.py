@@ -185,8 +185,8 @@ print("End scaling...")
 #process to workable dfs
 X_train = scaled_train_data.iloc[:, :-8].as_matrix()    #data
 Y_oh_train = scaled_train_data.iloc[:, -8:]             #labels
-X_test = scaled_test_data.iloc[:, :-8].as_matrix()      #data
-Y_oh_test = scaled_test_data.iloc[:, -8:]               #labels
+X_test = scaled_test_data[:, :-8]                       #data
+Y_oh_test = scaled_test_data[:, -8:]                    #labels
 Y_train = pd.DataFrame()
 Y_test = pd.DataFrame()
 Y_train['exp'] = sum(i*Y_oh_train.iloc[:, i] for i in range(8))
