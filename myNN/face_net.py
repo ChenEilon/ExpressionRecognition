@@ -1,13 +1,42 @@
 import pandas as pd
 from sklearn.utils import shuffle
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 import keras
 from keras.models import Sequential
 from keras.layers import *
 from keras.optimizers import SGD
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+import os
 
+
+def data_preprocess(dirname, filename="face.csv"):
+    # Load training data set from CSV file
+    data_df = pd.read_csv(os.path.join(dirname, filename))
+
+    # Data needs to be scaled to a small range like 0 to 1 for the neural
+    # network to work well.
+    scaler = MinMaxScaler(feature_range=(0, 1))
+
+    # Scale both the training inputs and outputs
+    scaled = scaler.fit_transform(data_df)
+
+    # Create new pandas DataFrame objects from the scaled data
+    scaled_df = pd.DataFrame(scaled, columns=data_df.columns.values)
+
+    # Save scaled data dataframes to new CSV files
+    scaled_df.to_csv(os.path.join(dirname, "scaled_{0}".format(filename)), index=False)
+
+    # Save scaling data
+    scaling_data = pd.DataFrame([scaler.scale_, scaler.min_], columns=data_df.columns.values)
+    scaling_data.to_csv(os.path.join(dirname, "scaling_data_{0}".format(filename)), index=False)
+
+    return scaled_df, scaling_data
+
+
+def scale_data(data_df, scaling_data_df):
+    return data_df*scaling_data_df.iloc[0, :]+scaling_data_df.iloc[1, :]
 
 
 def createCNN2(num_classes, num_img, size_img):
