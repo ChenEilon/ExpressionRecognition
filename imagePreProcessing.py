@@ -300,6 +300,7 @@ def csv_to_features(csvDirPath, filePrefix="affectnet_landmarks"):
         col_names.append("y_{0:d}".format(i))
     filenames = [entry.name for entry in os.scandir(csvDirPath) if entry.name.endswith(".csv") and entry.name.startswith(filePrefix)]
     for f in filenames:
+        print("Processing {0}".format(f))
         data_df = pd.read_csv(os.path.join(csvDirPath, f))
         df_filtered = data_df.query('expression<=7').dropna() #filter out non-faces
         #ndarray of wanted landmarks (row per image)
