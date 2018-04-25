@@ -179,14 +179,14 @@ csvPaths = [".//Affectnet//features_affectnet_landmarks_{0}.csv".format(str(i)) 
 train_df, test_df = imagePreProcessing.prepare_balanced_data(csvPaths, 2000)
 print("Start scaling...")
 scaled_train_data, scaler = data_preprocess(train_df)
-scaling_test_data = scaler.transform(test_df)
+scaled_test_data = scaler.transform(test_df)
 print("End scaling...")
 
 #process to workable dfs
 X_train = scaled_train_data.iloc[:, :-8].as_matrix()    #data
 Y_oh_train = scaled_train_data.iloc[:, -8:]             #labels
-X_test = scaling_test_data.iloc[:, :-8].as_matrix()      #data
-Y_oh_test = scaling_test_data.iloc[:, -8:]               #labels
+X_test = scaled_test_data.iloc[:, :-8].as_matrix()      #data
+Y_oh_test = scaled_test_data.iloc[:, -8:]               #labels
 Y_train = pd.DataFrame()
 Y_test = pd.DataFrame()
 Y_train['exp'] = sum(i*Y_oh_train.iloc[:, i] for i in range(8))
