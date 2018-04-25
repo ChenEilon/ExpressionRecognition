@@ -9,6 +9,9 @@ from keras.layers import *
 from keras.optimizers import SGD
 import numpy as np
 import os
+import sys
+sys.path.insert(0, "..")
+import imagePreProcessing
 
 
 def data_preprocess(dirname, filename="face.csv"):
@@ -133,8 +136,8 @@ def getModel1(img_size = 6929):
     #model.add(GlobalMaxPooling1D()) # we use max pooling:
     model.add(Dense(100, activation='relu', name='layer_3'))
     model.add(Dense(40, activation='relu', name='layer_4'))
-    model.add(Dense(8, activation='linear', name='output_layer'))
-    model.compile(loss='mean_squared_error', optimizer='adam', metrics=["accuracy"])
+    model.add(Dense(8, activation='softmax', name='output_layer'))
+    model.compile(loss='catagorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     return model
     
 def getDenseModel(img_size = 6929):
