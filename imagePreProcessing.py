@@ -294,23 +294,22 @@ def csv_to_features(csvDirPath, filePrefix="affectnet_landmarks"):
     in - csv from sort_sample_affectnet
     out - features dataframe
     """
-    paths = [entry.path for entry in os.scandir(csvDirPath) if entry.name.endswith(".csv") and entry.name.startswith(filePrefix)]
-    data_dfs = [pd.read_csv(path) for path in paths]
-    data_df = pd.concat(data_dfs, ignore_index=True)
-    df_filtered = data_df.query('expression<=7').dropna() #filter out non-faces
-    #ndarray of wanted landmarks (row per image)
     col_names = []
     for i in REF_POINTS:
         col_names.append("x_{0:d}".format(i))
         col_names.append("y_{0:d}".format(i))
-    images_df = df_filtered[col_names]
-    images_df = np.reshape(images_df.values.astype(int), (len(images_df), len(REF_POINTS), 2))
-    #extract features
-    features_df = extract_features_forall(images_df)
-    features_df["expression"] = df_filtered["expression"].values
-    add_expression_dummies(features_df)
-    features_df.to_csv(os.path.join(csvDirPath, "features.csv"))
-    return features_df
+    filenames = [entry.name for entry in os.scandir(csvDirPath) if entry.name.endswith(".csv") and entry.name.startswith(filePrefix)]
+    for f in filenames:
+        data_df = pd.read_csv(os.path.join(csvDirPath, f))
+        df_filtered = data_df.query('expression<=7').dropna() #filter out non-faces
+        #ndarray of wanted landmarks (row per image)
+        images_df = df_filtered[col_names]
+        images_df = np.reshape(images_df.values.astype(int), (len(images_df), len(REF_POINTS), 2))
+        #extract features
+        features_df = extract_features_forall(images_df)
+        features_df["expression"] = df_filtered["expression"].values
+        add_expression_dummies(features_df)
+        features_df.to_csv(os.path.join(csvDirPath, "features_{0}".format(f)))
 
 
 #######################################################################################
