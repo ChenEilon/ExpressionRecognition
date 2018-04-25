@@ -288,13 +288,15 @@ def add_expression_dummies(features_df):
         features_df["is_{0:s}".format(EMOTIONS[i])] = (features_df["expression"] == i)
     features_df.drop("expression", axis=1, inplace=True)
 
-def csv_to_features(csvPath):
+def csv_to_features(csvDirPath, filePrefix="affectnet_landmarks"):
     """
     in - csv from sort_sample_affectnet
     out - features dataframe
     """
-    data_df = pd.read_csv(csvPath)
-    df_filtered = data_df.query('expression<7').dropna() #filter out non-faces
+    paths = [entry.path for entry in os.scandir(csvDirPath) if entry.name.endswith(".csv") and entry.name.startswith(filePrefix)]
+    data_dfs = [pd.read_csv(path) for path in paths]
+    data_df = pd.concat(data_dfs, ignore_index=True)
+    df_filtered = data_df.query('expression<=7').dropna() #filter out non-faces
     #ndarray of wanted landmarks (row per image)
     col_names = []
     for i in REF_POINTS:
@@ -306,10 +308,10 @@ def csv_to_features(csvPath):
     features_df = extract_features_forall(images_df)
     features_df["expression"] = df_filtered["expression"].values
     add_expression_dummies(features_df)
-    features_df.to_csv("features_FirstSample.csv")
+    features_df.to_csv(os.path.join(csvDirPath, "features.csv"))
     return features_df
-    
-                
+
+
 #######################################################################################
 ##############            Extract features and reducing dimensions         ############
 #######################################################################################
