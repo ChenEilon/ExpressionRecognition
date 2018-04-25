@@ -376,6 +376,24 @@ def dimension_reduction_pca(df, components = 100):
     pca.fit_transform(x)
     return pca
     
+
+def prepare_balanced_data(csvPaths, portionCount, testPart = 0.1):
+    assert testPart<=1
+    m_random_state = 33
+    test_threshhold = int(portionCount*(testPart))
+    data_df_tmp = pd.read_csv(csvPaths[0])
+    data_df_tmp = shuffle(data_df_tmp, random_state=m_random_state)
+    data_df_test = data_df_tmp[:test_threshhold]
+    data_df_train = data_df_tmp[test_threshhold:]
+    for i in range(len(csvPaths)-1):
+        data_df_tmp = pd.read_csv(csvPaths[i+1])
+        data_df_tmp = data_df[:portionCount]
+        data_df_tmp = shuffle(data_df_tmp, random_state=m_random_state)
+        data_df_test = data_df_test.append(data_df_tmp[:test_threshhold])
+        data_df_train = data_df_train.append(data_df_tmp[test_threshhold:])
+    data_df_test = shuffle(data_df_test, random_state=m_random_state)
+    data_df_train = shuffle(data_df_train, random_state=m_random_state)
+    return data_df_train,data_df_test     
     
 #######################################################################################
 ##############            Machine learning algorithms                      ############
