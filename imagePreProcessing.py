@@ -15,6 +15,7 @@ import time
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import random
+from sklearn.utils import shuffle
 
 
 faceDet = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
@@ -389,7 +390,7 @@ def prepare_balanced_data(csvPaths, portionCount, testPart = 0.1):
     data_df_train = data_df_tmp[test_threshhold:]
     for i in range(len(csvPaths)-1):
         data_df_tmp = pd.read_csv(csvPaths[i+1])
-        data_df_tmp = data_df[:portionCount]
+        data_df_tmp = data_df_tmp[:portionCount]
         data_df_tmp = shuffle(data_df_tmp, random_state=m_random_state)
         data_df_test = data_df_test.append(data_df_tmp[:test_threshhold])
         data_df_train = data_df_train.append(data_df_tmp[test_threshhold:])
@@ -586,4 +587,5 @@ def test_train_NN_times(inputFolderCKData):
 #test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
 #plot_3_principal_components(r"C:\Santos\TAU\Final\Datasets\CK+\sorted_set - CK+")
 #sort_sample_affectnet(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\Manually_Annotated\FirstTrain", r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\\Manually_Annotated\FirstTrain.csv")
-csv_to_features(r"C:\Users\Santos\Documents\GitHub\ExpressionRecognition\FirstTrain\out.csv")
+#csv_to_features(r"C:\Users\Santos\Documents\GitHub\ExpressionRecognition\FirstTrain\out.csv")
+print("test syntax passed:)")
