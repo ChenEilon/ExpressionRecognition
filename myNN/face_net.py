@@ -32,8 +32,7 @@ def data_preprocess(data_df):
     scaling_data = pd.DataFrame([scaler.scale_, scaler.min_], columns=data_df.columns.values)
     scaling_data.to_csv("scaling_data.csv", index=False)
 
-    #return scaled_df, scaling_data
-    return scaler, scaling_data
+    return scaled_df, scaler
 
 
 def scale_data(data_df, scaling_data_df):
@@ -177,15 +176,15 @@ def dimension_reduction_pca(df, components = 100):
 #test_data_df = data_df[training:]
 
 csvPaths = [".//Affectnet//features_affectnet_landmarks_{0}.csv".format(str(i)) for i in range(8)]
-train_df,test_df = prepare_balanced_data(csvPaths, 2000)
-print("Start scailing...")
-scaler, scaling_train_data = data_preprocess(train_df)
+train_df, test_df = imagePreProcessing.prepare_balanced_data(csvPaths, 2000)
+print("Start scaling...")
+scaled_train_data, scaler = data_preprocess(train_df)
 scaling_test_data = scaler.transform(test_df)
-print("End scailing...")
+print("End scaling...")
 
 #process to workable dfs
-X_train = scaling_train_data.iloc[:, :-8].as_matrix()    #data
-Y_oh_train = scaling_train_data.iloc[:, -8:]             #labels
+X_train = scaled_train_data.iloc[:, :-8].as_matrix()    #data
+Y_oh_train = scaled_train_data.iloc[:, -8:]             #labels
 X_test = scaling_test_data.iloc[:, :-8].as_matrix()      #data
 Y_oh_test = scaling_test_data.iloc[:, -8:]               #labels
 Y_train = pd.DataFrame()
