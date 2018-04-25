@@ -380,9 +380,8 @@ def dimension_reduction_pca(df, components = 100):
     return pca
     
 
-def prepare_balanced_data(csvPaths, portionCount, testPart = 0.1):
+def prepare_balanced_data(csvPaths, portionCount, testPart = 0.1, m_random_state = 33):
     assert testPart<=1
-    m_random_state = 33
     test_threshhold = int(portionCount*(testPart))
     data_df_tmp = pd.read_csv(csvPaths[0])
     data_df_tmp = shuffle(data_df_tmp, random_state=m_random_state)
