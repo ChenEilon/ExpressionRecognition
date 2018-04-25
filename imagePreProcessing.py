@@ -289,7 +289,7 @@ def add_expression_dummies(features_df):
         features_df["is_{0:s}".format(EMOTIONS[i])] = (features_df["expression"] == i)
     features_df.drop("expression", axis=1, inplace=True)
 
-def csv_to_features(csvDirPath, filePrefix="affectnet_landmarks"):
+def csv_to_features(csvDirPath, maxRows=2000, filePrefix="affectnet_landmarks"):
     """
     in - csv from sort_sample_affectnet
     out - features dataframe
@@ -302,7 +302,7 @@ def csv_to_features(csvDirPath, filePrefix="affectnet_landmarks"):
     for f in filenames:
         print("Processing {0}".format(f))
         data_df = pd.read_csv(os.path.join(csvDirPath, f))
-        df_filtered = data_df.query('expression<=7').dropna() #filter out non-faces
+        df_filtered = data_df.query('expression<=7').dropna().iloc[:maxRows, :] #filter out non-faces
         #ndarray of wanted landmarks (row per image)
         images_df = df_filtered[col_names]
         images_df = np.reshape(images_df.values.astype(int), (len(images_df), len(REF_POINTS), 2))
