@@ -337,12 +337,12 @@ def extract_features(image):
     #distance features
     dot_m = dot_matrix(image)
     dist_m = dist_matrix(dot_m)
-    dists = dist_array(dist_m)
+    #dists = dist_array(dist_m)
     #angles features
     angles = angle_array(dot_m, dist_m)
     #flatten and concat
-    features_vector = np.concatenate((dists, angles))
-    return np.around(features_vector, decimals = 2)
+    #features_vector = np.concatenate((dists, angles))
+    return np.around(angles, decimals = 2)
     
 def extract_features_forall(images):
     """
