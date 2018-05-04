@@ -32,7 +32,7 @@ def data_preprocess(data_df):
     scaling_data = pd.DataFrame([scaler.scale_, scaler.min_], columns=data_df.columns.values)
     scaling_data.to_csv("scaling_data.csv", index=False)
 
-    return scaled_df, scaling_data
+    return scaled_df, scaler
 
 
 def scale_data(data_df, scaling_data_df):
@@ -126,7 +126,7 @@ def createCNN4(num_classes, num_img, size_img):
     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     return model
 
-def getModel1(img_size = 6929):
+def getModel1(img_size = 6552):
     model = Sequential()
     model.add(Dense(2000, input_dim=img_size, activation='relu', name='layer_1'))
     #model.add(Conv1D(100, 6, padding='valid', activation='relu',strides=1))
@@ -137,7 +137,7 @@ def getModel1(img_size = 6929):
     model.compile(loss='catagorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     return model
     
-def getDenseModel(img_size = 6929):
+def getDenseModel(img_size = 6552):
     model = Sequential()
     model.add(Dense(4000, input_dim=img_size, activation='relu', name='layer_1'))
     model.add(Dense(2000, activation='relu', name='layer_2'))
@@ -169,34 +169,44 @@ def dimension_reduction_pca(df, components = 100):
     return pca
     
     
-data_df = pd.read_csv("../face_scaled_affectnet_first11000.csv")
-data_df = shuffle(data_df, random_state=50)
+#data_df = pd.read_csv("../face_scaled_affectnet_first11000.csv")
+#data_df = shuffle(data_df, random_state=50)
+#training = 9000
+#training_data_df = data_df[:training]
+#test_data_df = data_df[training:]
 
-training = 9000
+csvPaths = [".//Affectnet//features_affectnet_landmarks_{0}.csv".format(str(i)) for i in range(8)]
+train_df, test_df = imagePreProcessing.prepare_balanced_data(csvPaths, 2000)
+print("Start scaling...")
+scaled_train_data, scaler = data_preprocess(train_df)
+scaled_test_data = scaler.transform(test_df)
+print("End scaling...")
 
-training_data_df = data_df[:training]
-test_data_df = data_df[training:]
+#process to workable dfs
+X_train = scaled_train_data.iloc[:, :-8].as_matrix()    #data
+Y_oh_train = scaled_train_data.iloc[:, -8:]             #labels
+X_test = scaled_test_data[:, :-8]                       #data
+Y_oh_test = scaled_test_data[:, -8:]                    #labels
+Y_train = pd.DataFrame()
+Y_test = pd.DataFrame()
+Y_train['exp'] = sum(i*Y_oh_train.iloc[:, i] for i in range(8))
+Y_test['exp'] = sum(i*Y_oh_test.iloc[:, i] for i in range(8))
+Y_train = np.array(Y_train['exp'])
+Y_test = np.array(Y_test['exp'])
 
-X = training_data_df.iloc[:, :-8].as_matrix()
-Y = training_data_df.iloc[:, -8:].as_matrix()
-
-X_test = test_data_df.iloc[:, :-8].as_matrix()
-Y_test = test_data_df.iloc[:, -8:].as_matrix()
-
-print("Data is prepared!, PCA...")
-
+print("Data is prepared!")
+img_size = 6552
 #pca dim reduction for conv:
-img_size = 6929
 #pca = dimension_reduction_pca(training_data_df.iloc[:, :-8], img_size)
 #X = pca.transform(training_data_df.iloc[:, :-8])
 #X_test = pca.transform(test_data_df.iloc[:, :-8])
-
-print("(not) PCA done. call model:")
+#print("(not) PCA done. call model:")
 
 #X = np.expand_dims(X, axis=2) # reshape (569, 30) to (569, 30, 1) for CNN
 #X_test = np.expand_dims(X_test, axis=2) # reshape (569, 30) to (569, 30, 1) for CNN
+
 # Define the model
-model = getDenseModel() #createCNN4(8, training, img_size)
+model = getModel1() #createCNN4(8, training, img_size)
 
 # Create a TensorBoard logger
 logger = keras.callbacks.TensorBoard(
