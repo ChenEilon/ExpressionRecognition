@@ -36,7 +36,7 @@ def data_preprocess(data_df):
 
 
 def scale_data(data_df, scaling_data_df):
-    return data_df * scaling_data_df.iloc[0, :] + scaling_data_df.iloc[1, :]
+    return (data_df * scaling_data_df.iloc[0, :] + scaling_data_df.iloc[1, :]).as_matrix()
 
 
 def createCNN2(num_classes, num_img, size_img):
@@ -146,7 +146,7 @@ def getModel1(img_size=6552):
     model.add(Dense(100, activation='relu', name='layer_3'))
     model.add(Dense(40, activation='relu', name='layer_4'))
     model.add(Dense(8, activation='softmax', name='output_layer'))
-    model.compile(loss='catagorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     return model
 
 
@@ -191,6 +191,7 @@ def dimension_reduction_pca(df, components=100):
 
 csvPaths = [r"..\Affectnet\features_affectnet_landmarks_{0}.csv".format(i) for i in range(8)]
 train_df, test_df = imagePreProcessing.prepare_balanced_data(csvPaths, 2000)
+
 print("Start scaling...")
 scaled_train_data, scaler = data_preprocess(train_df)
 scaled_test_data = scaler.transform(test_df)
@@ -198,7 +199,7 @@ print("End scaling...")
 
 # process to workable dfs
 X_train = scaled_train_data.iloc[:, :-8].as_matrix()  # data
-Y_oh_train = scaled_train_data.iloc[:, -8:]  # labels
+Y_oh_train = scaled_train_data.iloc[:, -8:].as_matrix()  # labels
 X_test = scaled_test_data[:, :-8]  # data
 Y_oh_test = scaled_test_data[:, -8:]  # labels
 

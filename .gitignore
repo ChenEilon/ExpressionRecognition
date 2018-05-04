@@ -1,3 +1,7 @@
 
 *.xml
 *.iml
+myNN/scaled_data.csv
+myNN/scaling_data.csv
+myNN/logs/events.out.tfevents.1525420740.CHEN-PC
+__pycache__/imagePreProcessing.cpython-35.pyc
