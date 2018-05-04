@@ -582,10 +582,9 @@ def test_train_NN_times(inputFolderCKData):
 #######################################################################################
 ##############            RUN                                              ############
 #######################################################################################
-    
+
 #test_images_flow(r"C:\Users\DELL1\Documents\studies\FinalProject\facial-landmarks\facial-landmarks\images")
 #test_ml_algos_on_ck(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\CK+\sorted_set")
 #plot_3_principal_components(r"C:\Santos\TAU\Final\Datasets\CK+\sorted_set - CK+")
 #sort_sample_affectnet(r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\Manually_Annotated\FirstTrain", r"C:\Users\DELL1\Documents\studies\FinalProject\Datatsets\AffectNet\\Manually_Annotated\FirstTrain.csv")
-#csv_to_features(r"C:\Users\Santos\Documents\GitHub\ExpressionRecognition\FirstTrain\out.csv")
-print("test syntax passed:)")
+#csv_to_features(r"C:\Users\Santos\Documents\GitHub\ExpressionRecognition\Affectnet")
