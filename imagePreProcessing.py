@@ -396,8 +396,11 @@ def prepare_balanced_data(csvPaths, portionCount, testPart = 0.1, m_random_state
         data_df_train = data_df_train.append(data_df_tmp[test_threshhold:])
     data_df_test = shuffle(data_df_test, random_state=m_random_state)
     data_df_train = shuffle(data_df_train, random_state=m_random_state)
-    return data_df_train,data_df_test     
-    
+    #delete first img id col
+    data_df_train = data_df_train.drop(data_df_train.columns[0], axis=1)
+    data_df_test = data_df_test.drop(data_df_test.columns[0], axis=1)
+    return data_df_train,data_df_test
+
 #######################################################################################
 ##############            Machine learning algorithms                      ############
 #######################################################################################
