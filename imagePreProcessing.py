@@ -233,8 +233,6 @@ def image_to_landmarks(image_path, detector, predictor):
     #faces_68_landmarks.append(shape)
     return shape
 
-
-        
 def extract_dlib_facial_points(inputFolder):
     """
     input - images folder name
@@ -250,7 +248,6 @@ def extract_dlib_facial_points(inputFolder):
             shape = image_to_landmarks(f, detector, predictor)
             faces_landmarks.append(shape[wanted_landmarks])
     return np.array(faces_landmarks)
-                
 
 def sort_sample_affectnet(inputFolder, csvPathAffectnet, start=0, count=10000):
     """
