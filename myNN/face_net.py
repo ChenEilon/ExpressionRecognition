@@ -138,19 +138,45 @@ def createCNN4(num_classes, num_img, size_img):
     return model
 
 
-def getModel1(img_size=6552):
+def getModel1(img_size):
     model = Sequential()
     model.add(Dense(2000, input_dim=img_size, activation='relu', name='layer_1'))
     # model.add(Conv1D(100, 6, padding='valid', activation='relu',strides=1))
     # model.add(GlobalMaxPooling1D()) # we use max pooling:
     model.add(Dense(100, activation='relu', name='layer_3'))
     model.add(Dense(40, activation='relu', name='layer_4'))
-    model.add(Dense(8, activation='softmax', name='output_layer'))
+    model.add(Dense(7, activation='softmax', name='output_layer'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     return model
 
 
-def getDenseModel(img_size=6552):
+def getModel2(img_size):
+    model = Sequential()
+    model.add(Dense(2000, input_dim=img_size, activation='relu', name='layer_1'))
+    # model.add(Conv1D(100, 6, padding='valid', activation='relu',strides=1))
+    # model.add(GlobalMaxPooling1D()) # we use max pooling:
+    model.add(Dense(40, activation='relu', name='layer_3'))
+    model.add(Dense(80, activation='relu', name='layer_4'))
+    model.add(Dense(40, activation='relu', name='layer_5'))
+    model.add(Dense(7, activation='softmax', name='output_layer'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    return model
+
+
+def getModel3(img_size):
+    model = Sequential()
+    model.add(Dense(2000, input_dim=img_size, activation='relu', name='layer_1'))
+    # model.add(Conv1D(100, 6, padding='valid', activation='relu',strides=1))
+    # model.add(GlobalMaxPooling1D()) # we use max pooling:
+    model.add(Dense(80, activation='relu', name='layer_3'))
+    model.add(Dense(80, activation='relu', name='layer_4'))
+    model.add(Dense(40, activation='relu', name='layer_5'))
+    model.add(Dense(7, activation='softmax', name='output_layer'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    return model
+
+
+def getDenseModel(img_size):
     model = Sequential()
     model.add(Dense(4000, input_dim=img_size, activation='relu', name='layer_1'))
     model.add(Dense(2000, activation='relu', name='layer_2'))
@@ -160,7 +186,7 @@ def getDenseModel(img_size=6552):
     # model.add(GlobalMaxPooling1D()) # we use max pooling:
     model.add(Dense(100, activation='relu', name='layer_5'))
     # model.add(Dense(40, activation='relu', name='layer_4'))
-    model.add(Dense(8, activation='linear', name='output_layer'))
+    model.add(Dense(7, activation='linear', name='output_layer'))
     model.compile(loss='mean_squared_error', optimizer='adam', metrics=["accuracy"])
     return model
 
@@ -183,13 +209,8 @@ def dimension_reduction_pca(df, components=100):
     return pca
 
 
-# data_df = pd.read_csv("../face_scaled_affectnet_first11000.csv")
-# data_df = shuffle(data_df, random_state=50)
-# training = 9000
-# training_data_df = data_df[:training]
-# test_data_df = data_df[training:]
-
-csvPaths = [r"..\Affectnet\features_affectnet_landmarks_{0}.csv".format(i) for i in range(8)]
+emotions = [1, 2]
+csvPaths = [r"..\Affectnet\features_affectnet_landmarks_{0}.csv".format(i) for i in emotions]
 train_df, test_df = imagePreProcessing.prepare_balanced_data(csvPaths, 2000)
 
 print("Start scaling...")
@@ -198,10 +219,10 @@ scaled_test_data = scaler.transform(test_df)
 print("End scaling...")
 
 # process to workable dfs
-X_train = scaled_train_data.iloc[:, :-8].as_matrix()  # data
-Y_oh_train = scaled_train_data.iloc[:, -8:].as_matrix()  # labels
-X_test = scaled_test_data[:, :-8]  # data
-Y_oh_test = scaled_test_data[:, -8:]  # labels
+X_train = scaled_train_data.iloc[:, :-7].as_matrix()  # data
+Y_oh_train = scaled_train_data.iloc[:, -7:].as_matrix()  # labels
+X_test = scaled_test_data[:, :-7]  # data
+Y_oh_test = scaled_test_data[:, -7:]  # labels
 
 # generate single expression label
 # Y_train = pd.DataFrame()
@@ -223,7 +244,8 @@ print("Data is prepared!")
 # X_test = np.expand_dims(X_test, axis=2) # reshape (569, 30) to (569, 30, 1) for CNN
 
 # Define the model
-model = getModel1()  # createCNN4(8, training, img_size)
+img_size = 6552
+model = getModel2(img_size)
 
 # Create a TensorBoard logger
 logger = keras.callbacks.TensorBoard(
@@ -237,7 +259,7 @@ print("Train model:")
 model.fit(
     X_train,
     Y_oh_train,
-    epochs=50,
+    epochs=20,
     shuffle=True,
     verbose=2,
     callbacks=[logger]
@@ -246,5 +268,3 @@ model.fit(
 test_error_rate, test_acc = model.evaluate(X_test, Y_oh_test, verbose=0)
 print("The mean squared error (MSE) for the test data set is: {}".format(test_error_rate))
 print("The accuracy for the test data set is: {}".format(test_acc))
-
-
