@@ -12,7 +12,7 @@ import numpy as np
 import cv2
 import dlib
 
-DELTA_THRESHOLD = 1.5
+DELTA_THRESHOLD = 2
 HAPPY_SONG = "./Bamboleo - Gipsy Kings.mp3"
 SAD_SONG = "./Goodbye My Lover - James Blunt.mp3"
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
@@ -145,9 +145,13 @@ class FaceDetectionWidget(QtWidgets.QWidget):
         self.prev_dists = []
         self.delta = 0
         self.is_first = True
-        self.debug_aid = 1 #TODO REMOVE
+        self.last_emotion = 1 #TODO adjust
 
-    def calculate_frames_delta(self, face_landmarks):
+    def is_frame_different(self, face_landmarks):
+        """
+        calculate frames delta - update prev dists if necessary
+        output - (bool) delta > DELTA_THRESHOLD
+        """
         #face_landmarks = np.array(face_landmarks[wanted_landmarks])
         dists = app_utils.extract_dist(face_landmarks)
         norm_factor = np.linalg.norm(face_landmarks[0]-face_landmarks[16])
@@ -155,10 +159,13 @@ class FaceDetectionWidget(QtWidgets.QWidget):
         delta = 0
         if not self.is_first:
             delta = np.linalg.norm(dists - self.prev_dists)
+            if delta > DELTA_THRESHOLD:
+                self.prev_dists = dists #Update when delta exceeding limit
+                print("Debug - frames delta was %.2f"%(delta))
         else:
             self.is_first = False
-        self.prev_dists = dists
-        return delta
+            self.prev_dists = dists #First update
+        return (delta > DELTA_THRESHOLD)
         
     def detect_faces(self, image: np.ndarray):
         gray = app_utils.preprocess_image(image)
@@ -174,11 +181,9 @@ class FaceDetectionWidget(QtWidgets.QWidget):
             face_landmarks = app_utils.shape_to_np(face_landmarks)
             (x, y, w, h) = app_utils.rect_to_bb(rect) # convert dlib's rectangle to a OpenCV-style bounding box [i.e., (x, y, w, h)]
             cv2.rectangle(image_data, (x, y), (x + w, y + h), self._red, self._width) #draw the face bounding box
-            delta =  self.calculate_frames_delta(face_landmarks)
-            if delta > DELTA_THRESHOLD:
-                cv2.putText(image_data, "Delta from prev is {}".format(delta), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self._red, self._width) #Debug
-                self.mood_change.emit(self.debug_aid)
-                self.debug_aid = (self.debug_aid+1)%2
+            if self.is_frame_different(face_landmarks):
+                #cv2.putText(image_data, "Delta from prev is {}".format(delta), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self._red, self._width) #TODO delete (Debug)
+                self.check_mood_change(face_landmarks)
         self.image = self.get_qimage(image_data)
         if self.image.size() != self.size():
             self.setFixedSize(self.image.size())
@@ -196,6 +201,15 @@ class FaceDetectionWidget(QtWidgets.QWidget):
         painter = QtGui.QPainter(self)
         painter.drawImage(0, 0, self.image)
         self.image = QtGui.QImage()
+        
+    def check_mood_change(self, face_landmarks):
+        #TODO fill
+        #1. Calculate Features
+        #2. Check previous mood and update
+        #3. Send a signal if necessary 
+        #For now:
+        self.mood_change.emit(self.last_emotion)
+        self.last_emotion = (self.last_emotion+1)%2
 
 class app_utils():
     def rect_to_bb(rect):
