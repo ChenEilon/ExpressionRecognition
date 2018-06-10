@@ -106,7 +106,7 @@ class Ui_MainWindow(object):
         #self.sad_song = QtCore.QUrl.fromLocalFile(SAD_SONG)
         mood_change_slot = self.mood_change_slot
         self.face_detection_widget.mood_change.connect(mood_change_slot)
-        
+
     def showSelf(self):
         self.face_detection_widget.setVisible(self.showSelfCB.isChecked())
 
@@ -132,13 +132,16 @@ class Ui_MainWindow(object):
             self.playBtn.setEnabled(False)
             self.showSelfCB.setEnabled(False)
             self.controlLayout.repaint()
-            # temp
-            time.sleep(2)
-            # /temp
+            self.zero_features()
             self.trainBtn.setText(STRING_TRAIN)
             self.trainBtn.setEnabled(True)
             self.playBtn.setEnabled(True)
             self.showSelfCB.setEnabled(True)
+
+    def zero_features(self):
+        # self.pause()
+        # self.showSelf()
+        time.sleep(2)
 
     def mood_change_slot(self, mood_change):
         # if mood_change == 1:
@@ -151,6 +154,7 @@ class Ui_MainWindow(object):
 
 class RecordVideo(QtCore.QObject):
     image_data = QtCore.pyqtSignal(np.ndarray)
+
     def __init__(self, camera_port=0, parent=None):
         super().__init__(parent)
         self.camera = cv2.VideoCapture(camera_port)
@@ -182,7 +186,7 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self._red = (0, 0, 255)
         self._width = 2
         #features object
-        self.features = FaceFeatures([]) #TODO adjust - need chen's part, init neutral features..
+        self.features = FaceFeatures() #TODO adjust - need chen's part, init neutral features..
         #calculating delta between frames:
         self.prev_dists = []
         self.delta = 0
@@ -287,7 +291,6 @@ class FaceFeatures(object):
             features_vector = features_vector - self.neutral_features
         return features_vector
 
-
 class MoodPlayLists(QtMultimedia.QMediaPlayer):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -302,10 +305,9 @@ class MoodPlayLists(QtMultimedia.QMediaPlayer):
             playlist.setPlaybackMode(QMediaPlaylist.Loop)
             self.playlists.append(playlist)
         self.setPlaylist(self.playlists[0])
-    
+
     def change_playlist(self, mood=0):
         self.setPlaylist(self.playlists[mood])
-
 
 class app_utils():
     def rect_to_bb(rect):
