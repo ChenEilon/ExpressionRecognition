@@ -42,7 +42,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.controlLayout = QtWidgets.QWidget(self.centralwidget)
-        self.controlLayout.setGeometry(QtCore.QRect(10, 260, 330, 23))
+        self.controlLayout.setGeometry(QtCore.QRect(10, 283, 330, 23))
         self.controlLayout.setObjectName("controlLayout")
         self.trainBtn = QtWidgets.QPushButton(self.controlLayout)
         self.trainBtn.setGeometry(QtCore.QRect(0, 0, 90, 23))
@@ -53,13 +53,17 @@ class Ui_MainWindow(object):
         self.showSelfCB = QtWidgets.QCheckBox(self.controlLayout)
         self.showSelfCB.setGeometry(QtCore.QRect(260, 0, 70, 17))
         self.showSelfCB.setObjectName("showSelfCB")
+        self.showSelfCB.setCheckState(2)
         self.slider1 = QtWidgets.QSlider(self.centralwidget)
         self.slider1.setGeometry(QtCore.QRect(10, 230, 321, 22))
         self.slider1.setOrientation(QtCore.Qt.Horizontal)
         self.slider1.setObjectName("slider1")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(20, 10, 231, 16))
-        self.label.setObjectName("label")
+        self.songLabel = QtWidgets.QLabel(self.centralwidget)
+        self.songLabel.setGeometry(QtCore.QRect(10, 260, 231, 16))
+        self.songLabel.setObjectName("songLabel")
+        self.titleLabel = QtWidgets.QLabel(self.centralwidget)
+        self.titleLabel.setGeometry(QtCore.QRect(20, 10, 231, 16))
+        self.titleLabel.setObjectName("titleLabel")
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 40, 311, 181))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
@@ -86,7 +90,7 @@ class Ui_MainWindow(object):
         self.trainBtn.setText(_translate("MainWindow", STRING_TRAIN))
         self.playBtn.setText(_translate("MainWindow", STRING_PLAY))
         self.showSelfCB.setText(_translate("MainWindow", STRING_SHOW_SELF))
-        self.label.setText(_translate("MainWindow", STRING_LABEL))
+        self.titleLabel.setText(_translate("MainWindow", STRING_LABEL))
 
     def guiActivate(self):
         #####Video part#####
@@ -118,6 +122,8 @@ class Ui_MainWindow(object):
             #content = QtMultimedia.QMediaContent(self.happy_song)
             #self.audio_player.setMedia(content)
             self.audio_player.play()
+            songName = self.audio_player.currentMedia().canonicalUrl().fileName()
+            self.songLabel.setText("Now Playing: %s"%(songName))
             self.playBtn.setText(STRING_PAUSE)
         else: #Pause
             self.record_video.stop_recording()
@@ -292,6 +298,7 @@ class FaceFeatures(object):
         return features_vector
 
 class MoodPlayLists(QtMultimedia.QMediaPlayer):
+    #self.playlist.currentMediaChanged.connect(self.songChanged)
     def __init__(self, parent=None):
         super().__init__(parent)
         moods = glob.glob(PLAYLISTS_PATH +"//*")
@@ -302,12 +309,19 @@ class MoodPlayLists(QtMultimedia.QMediaPlayer):
                 playlist = QMediaPlaylist(self)
                 url = QtCore.QUrl.fromLocalFile(s)
                 playlist.addMedia(QMediaContent(url))
-            playlist.setPlaybackMode(QMediaPlaylist.Loop)
+            #playlist.setPlaybackMode(QMediaPlaylist.Loop)
             self.playlists.append(playlist)
         self.setPlaylist(self.playlists[0])
 
     def change_playlist(self, mood=0):
         self.setPlaylist(self.playlists[mood])
+        #songName = self.currentMedia().canonicalUrl().fileName()
+        #self.songLabel.setText("Now Playing: %s"%(songName))
+    
+    # def songChanged(self, media):
+        # if not media.isNull():
+            # url = media.canonicalUrl()
+            # self.statusBar().showMessage(url.fileName())
 
 class app_utils():
     def rect_to_bb(rect):
