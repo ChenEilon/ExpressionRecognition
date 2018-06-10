@@ -107,8 +107,7 @@ class Ui_MainWindow(object):
         mood_change_slot = self.mood_change_slot
         self.face_detection_widget.mood_change.connect(mood_change_slot)
         self.audio_player.currentMediaChanged.connect(self.songChanged)
-        
-        
+
     def showSelf(self):
         self.face_detection_widget.setVisible(self.showSelfCB.isChecked())
 
@@ -136,13 +135,16 @@ class Ui_MainWindow(object):
             self.playBtn.setEnabled(False)
             self.showSelfCB.setEnabled(False)
             self.controlLayout.repaint()
-            # temp
-            time.sleep(2)
-            # /temp
+            self.zero_features()
             self.trainBtn.setText(STRING_TRAIN)
             self.trainBtn.setEnabled(True)
             self.playBtn.setEnabled(True)
             self.showSelfCB.setEnabled(True)
+
+    def zero_features(self):
+        # self.pause()
+        # self.showSelf()
+        time.sleep(2)
 
     def mood_change_slot(self, mood_change):
         self.audio_player.change_playlist(mood_change)
@@ -158,6 +160,7 @@ class Ui_MainWindow(object):
 
 class RecordVideo(QtCore.QObject):
     image_data = QtCore.pyqtSignal(np.ndarray)
+
     def __init__(self, camera_port=0, parent=None):
         super().__init__(parent)
         self.camera = cv2.VideoCapture(camera_port)
@@ -309,7 +312,7 @@ class MoodPlayLists(QtMultimedia.QMediaPlayer):
             playlist.setPlaybackMode(QMediaPlaylist.Loop)
             self.playlists.append(playlist)
         self.setPlaylist(self.playlists[0])
-    
+
     def change_playlist(self, mood=0):
         self.setPlaylist(self.playlists[mood])
 
