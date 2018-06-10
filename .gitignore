@@ -11,3 +11,4 @@ picNN/all/x_32.npy
 picNN/all/y_32.npy
 picNN/x_32.npy
 picNN/y_32.npy
+*.npy

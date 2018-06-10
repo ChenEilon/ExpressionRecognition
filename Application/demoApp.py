@@ -14,13 +14,14 @@ import cv2
 import dlib
 import pickle
 import glob
-import time
+import os
 
 DELTA_THRESHOLD = 21
 PLAYLISTS_PATH = r"./Playlists"
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger"]
 MOOD_PREDICTOR_FILENAME = "modelLF.dat"
+NEUTRAL_FEATURES_FILENAME = "neutral_features.npy"
 MIN_ZERO_SAMPLES = 100
 
 wanted_landmarks = [i-1 for i in REF_POINTS]
@@ -80,7 +81,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        
+
         self.guiActivate()
 
     def retranslateUi(self, MainWindow):
@@ -279,7 +280,7 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         painter = QtGui.QPainter(self)
         painter.drawImage(0, 0, self.image)
         self.image = QtGui.QImage()
-        
+
     def check_mood_change(self, face_landmarks):
         """
         #TODO enable & check
@@ -298,6 +299,7 @@ class MoodDetectionWidget(QtWidgets.QWidget):
 
     def zero_features(self):
         self.zero_flag = True
+        self.zero_landmarks = []
 
     def zero_landmarks_append(self, face_landmarks):
         self.zero_landmarks.append(face_landmarks)
@@ -310,13 +312,17 @@ class MoodDetectionWidget(QtWidgets.QWidget):
 class FaceFeatures(object):
     def __init__(self):
         self.neutral_features = None
+        if os.path.isfile(NEUTRAL_FEATURES_FILENAME):
+            self.neutral_features = np.load(NEUTRAL_FEATURES_FILENAME)
 
     def zero(self, zero_landmarks):
         if len(zero_landmarks) < MIN_ZERO_SAMPLES:
             return
         indices = [0, len(zero_landmarks) // 2, -1]
         features_mat = np.asarray([self.extract_features(v, True) for v in zero_landmarks[indices]])
-        self.neutral_features = np.average(features_mat, axis=0)
+        neutral_features = np.average(features_mat, axis=0)
+        np.save(NEUTRAL_FEATURES_FILENAME, neutral_features)
+        self.neutral_features = neutral_features
 
     def extract_features(self, face_landmarks, is_first):
         """
