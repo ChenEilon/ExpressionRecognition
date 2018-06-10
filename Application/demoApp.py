@@ -16,12 +16,12 @@ import pickle
 import glob
 import time
 
-DELTA_THRESHOLD = 21
+DELTA_THRESHOLD = 1.5
 PLAYLISTS_PATH = r"./Playlists"
-REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
+REF_POINTS = [1, 4, 14, 17, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger"]
 MOOD_PREDICTOR_FILENAME = "modelLF.dat"
-MIN_ZERO_SAMPLES = 100
+MIN_ZERO_SAMPLES = 20
 
 wanted_landmarks = [i-1 for i in REF_POINTS]
 
@@ -163,7 +163,7 @@ class Ui_MainWindow(object):
         self.showSelfCB.setEnabled(True)
 
     def mood_change_slot(self, mood_change):
-        self.audio_player.change_playlist(mood_change)
+        self.audio_player.change_playlist(mood_change+1)
         self.audio_player.play()
 
     def songChanged(self):
@@ -254,7 +254,7 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         image_data = cv2.resize(image_data, (350, 350))
         for (i, rect) in enumerate(faces):
             face_landmarks = self.landmarks_detector(app_utils.preprocess_image(image_data), rect)
-            face_landmarks = app_utils.shape_to_np(face_landmarks)
+            face_landmarks = app_utils.shape_to_np(face_landmarks)[wanted_landmarks]
             (x, y, w, h) = app_utils.rect_to_bb(rect) # convert dlib's rectangle to a OpenCV-style bounding box [i.e., (x, y, w, h)]
             cv2.rectangle(image_data, (x, y), (x + w, y + h), self._red, self._width) #draw the face bounding box
             if self.zero_flag:
@@ -281,20 +281,19 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self.image = QtGui.QImage()
         
     def check_mood_change(self, face_landmarks):
-        """
         #TODO enable & check
         #1. Calculate Features and mood
         frame_features = self.features.extract_features(face_landmarks, False)
-        mood = self.mood_classifier.predict(frame_features)
+        mood = self.mood_classifier.predict([frame_features])
         #2. Check previous mood and update
         if (mood == self.last_emotion):
             return
         #3. (else) Send a signal if necessary 
         self.last_emotion = mood
         self.mood_change.emit(mood)
-        """
-        self.mood_change.emit(self.last_emotion)
-        self.last_emotion = (self.last_emotion+1)%2
+        
+        # self.mood_change.emit(self.last_emotion)
+        # self.last_emotion = (self.last_emotion+1)%2
 
     def zero_features(self):
         self.zero_flag = True
