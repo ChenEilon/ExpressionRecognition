@@ -14,6 +14,7 @@ import cv2
 import dlib
 import pickle
 import glob
+import time
 
 DELTA_THRESHOLD = 2
 HAPPY_SONG = "./Bamboleo - Gipsy Kings.mp3" #TODO remove
@@ -25,6 +26,14 @@ MOOD_PREDICTOR_FILENAME = "modelLF.dat"
 
 wanted_landmarks = [i-1 for i in REF_POINTS]
 
+STRING_TITLE = "Emotion recognition music player"
+STRING_PLAY = "Play"
+STRING_PAUSE = "Pause"
+STRING_TRAIN = "Train"
+STRING_TRAINING = "Training..."
+STRING_SHOW_SELF = "Show Self"
+STRING_LABEL = "DEMO APP - Emotion recognition music player"
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         #####Qt Designer part#####
@@ -32,11 +41,17 @@ class Ui_MainWindow(object):
         MainWindow.resize(359, 335)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.playBtn = QtWidgets.QPushButton(self.centralwidget)
-        self.playBtn.setGeometry(QtCore.QRect(10, 260, 75, 23))
+        self.controlLayout = QtWidgets.QWidget(self.centralwidget)
+        self.controlLayout.setGeometry(QtCore.QRect(10, 260, 330, 23))
+        self.controlLayout.setObjectName("controlLayout")
+        self.trainBtn = QtWidgets.QPushButton(self.controlLayout)
+        self.trainBtn.setGeometry(QtCore.QRect(0, 0, 90, 23))
+        self.trainBtn.setObjectName("trainBtn")
+        self.playBtn = QtWidgets.QPushButton(self.controlLayout)
+        self.playBtn.setGeometry(QtCore.QRect(100, 0, 90, 23))
         self.playBtn.setObjectName("playBtn")
-        self.showSelfCB = QtWidgets.QCheckBox(self.centralwidget)
-        self.showSelfCB.setGeometry(QtCore.QRect(260, 260, 70, 17))
+        self.showSelfCB = QtWidgets.QCheckBox(self.controlLayout)
+        self.showSelfCB.setGeometry(QtCore.QRect(260, 0, 70, 17))
         self.showSelfCB.setObjectName("showSelfCB")
         self.slider1 = QtWidgets.QSlider(self.centralwidget)
         self.slider1.setGeometry(QtCore.QRect(10, 230, 321, 22))
@@ -67,10 +82,11 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Emotion recognition music player"))
-        self.playBtn.setText(_translate("MainWindow", "Play"))
-        self.showSelfCB.setText(_translate("MainWindow", "Show Self"))
-        self.label.setText(_translate("MainWindow", "DEMO APP - Emotion recognition music player"))
+        MainWindow.setWindowTitle(_translate("MainWindow", STRING_TITLE))
+        self.trainBtn.setText(_translate("MainWindow", STRING_TRAIN))
+        self.playBtn.setText(_translate("MainWindow", STRING_PLAY))
+        self.showSelfCB.setText(_translate("MainWindow", STRING_SHOW_SELF))
+        self.label.setText(_translate("MainWindow", STRING_LABEL))
 
     def guiActivate(self):
         #####Video part#####
@@ -81,6 +97,7 @@ class Ui_MainWindow(object):
         self.record_video.image_data.connect(image_data_slot)
         # connect the run button to the start recording slot
         self.verticalLayout.addWidget(self.face_detection_widget)
+        self.trainBtn.clicked.connect(self.train)
         self.playBtn.clicked.connect(self.play_pause)
         self.showSelfCB.stateChanged.connect(self.showSelf)
         #####Audio part#####
@@ -94,18 +111,35 @@ class Ui_MainWindow(object):
         self.face_detection_widget.setVisible(self.showSelfCB.isChecked())
 
     def play_pause(self):
-        if(self.playBtn.text()=="Play"):
+        assert(self.playBtn.text() in [STRING_PLAY, STRING_PAUSE])
+        if self.playBtn.text() == STRING_PLAY:
             self.showSelf()
             self.record_video.start_recording()
             #content = QtMultimedia.QMediaContent(self.happy_song)
             #self.audio_player.setMedia(content)
             self.audio_player.play()
-            self.playBtn.setText("Pause")
+            self.playBtn.setText(STRING_PAUSE)
         else: #Pause
             self.record_video.stop_recording()
             self.audio_player.pause()
-            self.playBtn.setText("Play")
-    
+            self.playBtn.setText(STRING_PLAY)
+
+    def train(self):
+        assert(self.trainBtn.text() in [STRING_TRAIN, STRING_TRAINING])
+        if self.trainBtn.text() == STRING_TRAIN:
+            self.trainBtn.setEnabled(False)
+            self.trainBtn.setText(STRING_TRAINING)
+            self.playBtn.setEnabled(False)
+            self.showSelfCB.setEnabled(False)
+            self.controlLayout.repaint()
+            # temp
+            time.sleep(2)
+            # /temp
+            self.trainBtn.setText(STRING_TRAIN)
+            self.trainBtn.setEnabled(True)
+            self.playBtn.setEnabled(True)
+            self.showSelfCB.setEnabled(True)
+
     def mood_change_slot(self, mood_change):
         # if mood_change == 1:
             # content = QtMultimedia.QMediaContent(self.happy_song)
@@ -227,8 +261,11 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self.last_emotion = (self.last_emotion+1)%2
 
 class FaceFeatures(object):
-    def __init__(self, neutral_features):
-        self.neutral_features = neutral_features #TODO change...
+    def __init__(self):
+        self.neutral_features = None
+
+    def zero(self, face_landmarks):
+        self.neutral_features = self.extract_features(face_landmarks, True)
 
     def extract_features(self, face_landmarks, is_first):
         """
@@ -247,8 +284,9 @@ class FaceFeatures(object):
         features_vector = np.around(np.concatenate((dists, angles)),decimals = 2)
         #normalize
         if not is_first:
-            features_vector = features_vector - neutral_features
+            features_vector = features_vector - self.neutral_features
         return features_vector
+
 
 class MoodPlayLists(QtMultimedia.QMediaPlayer):
     def __init__(self, parent=None):
@@ -268,7 +306,7 @@ class MoodPlayLists(QtMultimedia.QMediaPlayer):
     def change_playlist(self, mood=0):
         self.setPlaylist(self.playlists[mood])
 
-        
+
 class app_utils():
     def rect_to_bb(rect):
         """ take a bounding predicted by dlib and convert it

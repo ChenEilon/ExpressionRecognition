@@ -5,3 +5,9 @@ myNN/scaled_data.csv
 myNN/scaling_data.csv
 *.CHEN-PC
 __pycache__/imagePreProcessing.cpython-35.pyc
+picNN/12356/x_64.npy
+picNN/12356/y_64.npy
+picNN/all/x_32.npy
+picNN/all/y_32.npy
+picNN/x_32.npy
+picNN/y_32.npy
