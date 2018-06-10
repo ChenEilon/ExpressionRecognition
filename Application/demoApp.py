@@ -68,7 +68,7 @@ class Ui_MainWindow(object):
 
     def guiActivate(self):
         #####Video part#####
-        self.face_detection_widget = FaceDetectionWidget()
+        self.face_detection_widget = MoodDetectionWidget()
         self.record_video = RecordVideo()
         # Connect the image data signal and slot together
         image_data_slot = self.face_detection_widget.image_data_slot
@@ -108,7 +108,6 @@ class Ui_MainWindow(object):
             content = QtMultimedia.QMediaContent(self.sad_song)
         self.audio_player.setMedia(content)
         self.audio_player.play()
-    
 
 class RecordVideo(QtCore.QObject):
     image_data = QtCore.pyqtSignal(np.ndarray)
@@ -130,7 +129,7 @@ class RecordVideo(QtCore.QObject):
         if read:
             self.image_data.emit(image)
 
-class FaceDetectionWidget(QtWidgets.QWidget):
+class MoodDetectionWidget(QtWidgets.QWidget):
     mood_change = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
@@ -140,7 +139,6 @@ class FaceDetectionWidget(QtWidgets.QWidget):
         self.image = QtGui.QImage()
         self._red = (0, 0, 255)
         self._width = 2
-        self._min_size = (30, 30)
         #calculating delta between frames:
         self.prev_dists = []
         self.delta = 0
@@ -211,6 +209,31 @@ class FaceDetectionWidget(QtWidgets.QWidget):
         self.mood_change.emit(self.last_emotion)
         self.last_emotion = (self.last_emotion+1)%2
 
+class FaceFeatures(object):
+    def __init__(self, neutral_features):
+        self.neutral_features = neutral_features #TODO change...
+
+    def extract_features(self, face_landmarks, is_first):
+        """
+        input - nparray of facial landmarks (point (x,y))
+        output - nparray of features per image
+        """
+        #distance features
+        dot_m = app_utils.dot_matrix(face_landmarks)
+        dist_m = app_utils.dist_matrix(dot_m)
+        dists = app_utils.dist_array(dist_m)
+        norm_factor = np.linalg.norm(face_landmarks[0]-face_landmarks[3]) # dist(1,17)
+        dists = dists / norm_factor
+        #angles features
+        angles = app_utils.angle_array(dot_m, dist_m)
+        #flatten and concat
+        features_vector = np.around(np.concatenate((dists, angles)),decimals = 2)
+        #normalize
+        if not is_first:
+            features_vector = features_vector - neutral_features
+        return features_vector
+        
+       
 class app_utils():
     def rect_to_bb(rect):
         """ take a bounding predicted by dlib and convert it
