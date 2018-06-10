@@ -17,6 +17,8 @@ HAPPY_SONG = "./Bamboleo - Gipsy Kings.mp3"
 SAD_SONG = "./Goodbye My Lover - James Blunt.mp3"
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger"]
+MOOD_PREDICTOR_FILENAME = "modelLF.dat"
+
 wanted_landmarks = [i-1 for i in REF_POINTS]
 
 class Ui_MainWindow(object):
@@ -136,14 +138,18 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.detector = dlib.get_frontal_face_detector()
         self.landmarks_detector = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+        self.mood_classifier = pickle.load(open(MOOD_PREDICTOR_FILENAME, 'rb'))
         self.image = QtGui.QImage()
+        #Graphic properties
         self._red = (0, 0, 255)
         self._width = 2
+        #features object
+        self.features = FaceFeatures([]) #TODO adjust - need chen's part, init neutral features..
         #calculating delta between frames:
         self.prev_dists = []
         self.delta = 0
         self.is_first = True
-        self.last_emotion = 1 #TODO adjust
+        self.last_emotion = 0 #Start from neutral
 
     def is_frame_different(self, face_landmarks):
         """
@@ -201,13 +207,16 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self.image = QtGui.QImage()
         
     def check_mood_change(self, face_landmarks):
-        #TODO fill
-        #1. Calculate Features
+        #TODO check
+        #1. Calculate Features and mood
+        frame_features = self.features.extract_features(face_landmarks, False)
+        mood = self.mood_classifier.predict(frame_features)
         #2. Check previous mood and update
-        #3. Send a signal if necessary 
-        #For now:
-        self.mood_change.emit(self.last_emotion)
-        self.last_emotion = (self.last_emotion+1)%2
+        if (mood == self.last_emotion):
+            return
+        #3. (else) Send a signal if necessary 
+        self.last_emotion = mood
+        self.mood_change.emit(mood)
 
 class FaceFeatures(object):
     def __init__(self, neutral_features):
@@ -233,7 +242,6 @@ class FaceFeatures(object):
             features_vector = features_vector - neutral_features
         return features_vector
         
-       
 class app_utils():
     def rect_to_bb(rect):
         """ take a bounding predicted by dlib and convert it
