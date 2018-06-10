@@ -21,6 +21,7 @@ PLAYLISTS_PATH = r"./Playlists"
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger"]
 MOOD_PREDICTOR_FILENAME = "modelLF.dat"
+MIN_ZERO_SAMPLES = 100
 
 wanted_landmarks = [i-1 for i in REF_POINTS]
 
@@ -106,6 +107,8 @@ class Ui_MainWindow(object):
         self.audio_player = MoodPlayLists()
         mood_change_slot = self.mood_change_slot
         self.face_detection_widget.mood_change.connect(mood_change_slot)
+        training_complete_slot = self.training_complete_slot
+        self.face_detection_widget.training_complete.connect(training_complete_slot)
         self.audio_player.currentMediaChanged.connect(self.songChanged)
 
     def showSelf(self):
@@ -133,24 +136,23 @@ class Ui_MainWindow(object):
         else: #Pause
             self.pause()
 
-    def zero_features(self):
-        self.pause()
-        if not self.showSelfCB.isChecked():
-            self.showSelfCB.setChecked(True)
-        self.record_video.start_recording()
-        self.centralwidget.repaint()
-        time.sleep(4)
-        self.record_video.stop_recording()
-
     def train(self):
         # disable controls
         self.trainBtn.setEnabled(False)
         self.trainBtn.setText(STRING_TRAINING)
         self.playBtn.setEnabled(False)
         self.showSelfCB.setEnabled(False)
-        self.controlLayout.repaint()
+        # stop music and activate video capture
+        self.pause()
+        if not self.showSelfCB.isChecked():
+            self.showSelfCB.setChecked(True)
+        self.record_video.start_recording()
         # zero features
-        self.zero_features()
+        self.face_detection_widget.zero_features()
+
+    def training_complete_slot(self):
+        # deactivate video capture
+        self.record_video.stop_recording()
         # reenable controls
         self.trainBtn.setText(STRING_TRAIN)
         self.trainBtn.setEnabled(True)
@@ -160,14 +162,10 @@ class Ui_MainWindow(object):
     def mood_change_slot(self, mood_change):
         self.audio_player.change_playlist(mood_change)
         self.audio_player.play()
-        
+
     def songChanged(self):
         songName = self.audio_player.currentMedia().canonicalUrl().fileName()
         self.songLabel.setText("Now Playing: %s"%(songName))
-        
-
-     
-        
 
 class RecordVideo(QtCore.QObject):
     image_data = QtCore.pyqtSignal(np.ndarray)
@@ -192,6 +190,7 @@ class RecordVideo(QtCore.QObject):
 
 class MoodDetectionWidget(QtWidgets.QWidget):
     mood_change = QtCore.pyqtSignal(int)
+    training_complete = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -208,6 +207,8 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self.prev_dists = []
         self.delta = 0
         self.is_first = True
+        self.zero_flag = False
+        self.zero_landmarks = []
         self.last_emotion = 0 #Start from neutral
 
     def is_frame_different(self, face_landmarks):
@@ -244,7 +245,9 @@ class MoodDetectionWidget(QtWidgets.QWidget):
             face_landmarks = app_utils.shape_to_np(face_landmarks)
             (x, y, w, h) = app_utils.rect_to_bb(rect) # convert dlib's rectangle to a OpenCV-style bounding box [i.e., (x, y, w, h)]
             cv2.rectangle(image_data, (x, y), (x + w, y + h), self._red, self._width) #draw the face bounding box
-            if self.is_frame_different(face_landmarks):
+            if self.zero_flag:
+                self.zero_landmarks_append(face_landmarks)
+            elif self.is_frame_different(face_landmarks):
                 #cv2.putText(image_data, "Delta from prev is {}".format(delta), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self._red, self._width) #TODO delete (Debug)
                 self.check_mood_change(face_landmarks)
         self.image = self.get_qimage(image_data)
@@ -281,12 +284,27 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self.mood_change.emit(self.last_emotion)
         self.last_emotion = (self.last_emotion+1)%2
 
+    def zero_features(self):
+        self.zero_flag = True
+
+    def zero_landmarks_append(self, face_landmarks):
+        self.zero_landmarks.append(face_landmarks)
+        if len(self.zero_landmarks) >= MIN_ZERO_SAMPLES:
+            self.features.zero(np.asarray(self.zero_landmarks))
+            self.zero_landmarks = []
+            self.zero_flag = False
+            self.training_complete.emit()
+
 class FaceFeatures(object):
     def __init__(self):
         self.neutral_features = None
 
-    def zero(self, face_landmarks):
-        self.neutral_features = self.extract_features(face_landmarks, True)
+    def zero(self, zero_landmarks):
+        if len(zero_landmarks) < MIN_ZERO_SAMPLES:
+            return
+        indices = [0, len(zero_landmarks) // 2, -1]
+        features_mat = np.asarray([self.extract_features(v, True) for v in zero_landmarks[indices]])
+        self.neutral_features = np.average(features_mat, axis=0)
 
     def extract_features(self, face_landmarks, is_first):
         """
@@ -302,7 +320,7 @@ class FaceFeatures(object):
         #angles features
         angles = app_utils.angle_array(dot_m, dist_m)
         #flatten and concat
-        features_vector = np.around(np.concatenate((dists, angles)),decimals = 2)
+        features_vector = np.around(np.concatenate((dists, angles)), decimals=2)
         #normalize
         if not is_first:
             features_vector = features_vector - self.neutral_features
