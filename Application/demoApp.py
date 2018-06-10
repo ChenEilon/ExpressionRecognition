@@ -52,10 +52,10 @@ class Ui_MainWindow(object):
         self.showSelfCB.setGeometry(QtCore.QRect(260, 0, 70, 17))
         self.showSelfCB.setObjectName("showSelfCB")
         self.showSelfCB.setCheckState(2)
-        self.slider1 = QtWidgets.QSlider(self.centralwidget)
-        self.slider1.setGeometry(QtCore.QRect(10, 230, 321, 22))
-        self.slider1.setOrientation(QtCore.Qt.Horizontal)
-        self.slider1.setObjectName("slider1")
+        self.playSlider = QtWidgets.QSlider(self.centralwidget)
+        self.playSlider.setGeometry(QtCore.QRect(10, 230, 321, 22))
+        self.playSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.playSlider.setObjectName("playSlider")
         self.songLabel = QtWidgets.QLabel(self.centralwidget)
         self.songLabel.setGeometry(QtCore.QRect(10, 255, 231, 22))
         self.songLabel.setObjectName("songLabel")
@@ -105,8 +105,11 @@ class Ui_MainWindow(object):
         #####Audio part#####
         self.audio_player = MoodPlayLists()
         mood_change_slot = self.mood_change_slot
+        self.playSlider.sliderMoved.connect(self.setPosition)
         self.face_detection_widget.mood_change.connect(mood_change_slot)
         self.audio_player.currentMediaChanged.connect(self.songChanged)
+        self.audio_player.positionChanged.connect(self.positionChanged)
+        self.audio_player.durationChanged.connect(self.durationChanged)
 
     def showSelf(self):
         self.face_detection_widget.setVisible(self.showSelfCB.isChecked())
@@ -154,7 +157,14 @@ class Ui_MainWindow(object):
         songName = self.audio_player.currentMedia().canonicalUrl().fileName()
         self.songLabel.setText("Now Playing: %s"%(songName))
         
+    def positionChanged(self, position):
+        self.playSlider.setValue(position)
 
+    def durationChanged(self, duration):
+        self.playSlider.setRange(0, duration)
+        
+    def setPosition(self, position):
+         self.audio_player.setPosition(position)
      
         
 
