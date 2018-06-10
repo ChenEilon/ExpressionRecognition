@@ -58,6 +58,10 @@ class Ui_MainWindow(object):
         self.playSlider.setGeometry(QtCore.QRect(10, 230, 321, 22))
         self.playSlider.setOrientation(QtCore.Qt.Horizontal)
         self.playSlider.setObjectName("playSlider")
+        self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
+        self.progressBar.setGeometry(QtCore.QRect(10, 255, 231, 22))
+        self.progressBar.setObjectName("progressBar")
+        self.progressBar.setVisible(False)
         self.songLabel = QtWidgets.QLabel(self.centralwidget)
         self.songLabel.setGeometry(QtCore.QRect(10, 255, 231, 22))
         self.songLabel.setObjectName("songLabel")
@@ -110,6 +114,7 @@ class Ui_MainWindow(object):
         self.playSlider.sliderMoved.connect(self.setPosition)
         self.face_detection_widget.mood_change.connect(mood_change_slot)
         training_complete_slot = self.training_complete_slot
+        self.face_detection_widget.progress.connect(self.progress_slot)
         self.face_detection_widget.training_complete.connect(training_complete_slot)
         self.audio_player.currentMediaChanged.connect(self.songChanged)
         self.audio_player.positionChanged.connect(self.positionChanged)
@@ -146,6 +151,8 @@ class Ui_MainWindow(object):
         self.trainBtn.setText(STRING_TRAINING)
         self.playBtn.setEnabled(False)
         self.showSelfCB.setEnabled(False)
+        self.songLabel.setVisible(False)
+        self.progressBar.setVisible(True)
         # stop music and activate video capture
         self.pause()
         if not self.showSelfCB.isChecked():
@@ -162,6 +169,12 @@ class Ui_MainWindow(object):
         self.trainBtn.setEnabled(True)
         self.playBtn.setEnabled(True)
         self.showSelfCB.setEnabled(True)
+        self.songLabel.setVisible(True)
+        self.progressBar.setVisible(False)
+
+    def progress_slot(self, value):
+        progress_value = min(max(int(value), 0), 100)
+        self.progressBar.setValue(progress_value)
 
     def mood_change_slot(self, mood_change):
         print("Debug - mood change to - %s"%(EMOTIONS[mood_change+1]))
@@ -204,6 +217,7 @@ class RecordVideo(QtCore.QObject):
 
 class MoodDetectionWidget(QtWidgets.QWidget):
     mood_change = QtCore.pyqtSignal(int)
+    progress = QtCore.pyqtSignal(float)
     training_complete = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
@@ -303,6 +317,7 @@ class MoodDetectionWidget(QtWidgets.QWidget):
 
     def zero_landmarks_append(self, face_landmarks):
         self.zero_landmarks.append(face_landmarks)
+        self.progress.emit(100*(len(self.zero_landmarks) / MIN_ZERO_SAMPLES))
         if len(self.zero_landmarks) >= MIN_ZERO_SAMPLES:
             self.features.zero(np.asarray(self.zero_landmarks))
             self.zero_landmarks = []
