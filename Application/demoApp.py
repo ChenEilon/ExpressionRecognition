@@ -16,9 +16,7 @@ import pickle
 import glob
 import time
 
-DELTA_THRESHOLD = 2
-HAPPY_SONG = "./Bamboleo - Gipsy Kings.mp3" #TODO remove
-SAD_SONG = "./Goodbye My Lover - James Blunt.mp3" #TODO remove
+DELTA_THRESHOLD = 21
 PLAYLISTS_PATH = r"./Playlists"
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger"]
@@ -59,7 +57,7 @@ class Ui_MainWindow(object):
         self.slider1.setOrientation(QtCore.Qt.Horizontal)
         self.slider1.setObjectName("slider1")
         self.songLabel = QtWidgets.QLabel(self.centralwidget)
-        self.songLabel.setGeometry(QtCore.QRect(10, 260, 231, 16))
+        self.songLabel.setGeometry(QtCore.QRect(10, 255, 231, 22))
         self.songLabel.setObjectName("songLabel")
         self.titleLabel = QtWidgets.QLabel(self.centralwidget)
         self.titleLabel.setGeometry(QtCore.QRect(20, 10, 231, 16))
@@ -106,10 +104,9 @@ class Ui_MainWindow(object):
         self.showSelfCB.stateChanged.connect(self.showSelf)
         #####Audio part#####
         self.audio_player = MoodPlayLists()
-        #self.happy_song = QtCore.QUrl.fromLocalFile(HAPPY_SONG)
-        #self.sad_song = QtCore.QUrl.fromLocalFile(SAD_SONG)
         mood_change_slot = self.mood_change_slot
         self.face_detection_widget.mood_change.connect(mood_change_slot)
+        self.audio_player.currentMediaChanged.connect(self.songChanged)
 
     def showSelf(self):
         self.face_detection_widget.setVisible(self.showSelfCB.isChecked())
@@ -161,13 +158,16 @@ class Ui_MainWindow(object):
         self.showSelfCB.setEnabled(True)
 
     def mood_change_slot(self, mood_change):
-        # if mood_change == 1:
-            # content = QtMultimedia.QMediaContent(self.happy_song)
-        # else:
-            # content = QtMultimedia.QMediaContent(self.sad_song)
-        # self.audio_player.setMedia(content)
         self.audio_player.change_playlist(mood_change)
         self.audio_player.play()
+        
+    def songChanged(self):
+        songName = self.audio_player.currentMedia().canonicalUrl().fileName()
+        self.songLabel.setText("Now Playing: %s"%(songName))
+        
+
+     
+        
 
 class RecordVideo(QtCore.QObject):
     image_data = QtCore.pyqtSignal(np.ndarray)
@@ -309,30 +309,23 @@ class FaceFeatures(object):
         return features_vector
 
 class MoodPlayLists(QtMultimedia.QMediaPlayer):
-    #self.playlist.currentMediaChanged.connect(self.songChanged)
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         moods = glob.glob(PLAYLISTS_PATH +"//*")
         self.playlists = []
         for m in moods:
             songs = glob.glob(m + "//*")
+            playlist = QMediaPlaylist(self)
             for s in songs:
-                playlist = QMediaPlaylist(self)
                 url = QtCore.QUrl.fromLocalFile(s)
                 playlist.addMedia(QMediaContent(url))
-            #playlist.setPlaybackMode(QMediaPlaylist.Loop)
+            playlist.setPlaybackMode(QMediaPlaylist.Loop)
             self.playlists.append(playlist)
         self.setPlaylist(self.playlists[0])
 
     def change_playlist(self, mood=0):
         self.setPlaylist(self.playlists[mood])
-        #songName = self.currentMedia().canonicalUrl().fileName()
-        #self.songLabel.setText("Now Playing: %s"%(songName))
-    
-    # def songChanged(self, media):
-        # if not media.isNull():
-            # url = media.canonicalUrl()
-            # self.statusBar().showMessage(url.fileName())
 
 class app_utils():
     def rect_to_bb(rect):
