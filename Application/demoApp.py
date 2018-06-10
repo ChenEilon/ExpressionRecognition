@@ -21,6 +21,7 @@ PLAYLISTS_PATH = r"./Playlists"
 REF_POINTS = [1, 4, 14, 17, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger"]
 MOOD_PREDICTOR_FILENAME = "modelLF.dat"
+NEUTRAL_FEATURES_FILENAME = "neutral_features.npy"
 MIN_ZERO_SAMPLES = 20
 
 wanted_landmarks = [i-1 for i in REF_POINTS]
