@@ -177,6 +177,7 @@ class Ui_MainWindow(object):
         self.progressBar.setValue(progress_value)
 
     def mood_change_slot(self, mood_change):
+        print("Debug - mood change to - %s"%(EMOTIONS[mood_change+1]))
         self.audio_player.change_playlist(mood_change+1)
         self.audio_player.play()
 
