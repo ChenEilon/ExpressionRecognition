@@ -38,7 +38,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         #####Qt Designer part#####
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(359, 335)
+        MainWindow.resize(360, 360)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.controlLayout = QtWidgets.QWidget(self.centralwidget)
@@ -114,40 +114,51 @@ class Ui_MainWindow(object):
     def showSelf(self):
         self.face_detection_widget.setVisible(self.showSelfCB.isChecked())
 
+    def play(self):
+        self.showSelf()
+        self.record_video.start_recording()
+        #content = QtMultimedia.QMediaContent(self.happy_song)
+        #self.audio_player.setMedia(content)
+        self.audio_player.play()
+        songName = self.audio_player.currentMedia().canonicalUrl().fileName()
+        self.songLabel.setText("Now Playing: %s"%(songName))
+        self.playBtn.setText(STRING_PAUSE)
+
+    def pause(self):
+        self.record_video.stop_recording()
+        self.audio_player.pause()
+        self.playBtn.setText(STRING_PLAY)
+
     def play_pause(self):
         assert(self.playBtn.text() in [STRING_PLAY, STRING_PAUSE])
         if self.playBtn.text() == STRING_PLAY:
-            self.showSelf()
-            self.record_video.start_recording()
-            #content = QtMultimedia.QMediaContent(self.happy_song)
-            #self.audio_player.setMedia(content)
-            self.audio_player.play()
-            songName = self.audio_player.currentMedia().canonicalUrl().fileName()
-            self.songLabel.setText("Now Playing: %s"%(songName))
-            self.playBtn.setText(STRING_PAUSE)
+            self.play()
         else: #Pause
-            self.record_video.stop_recording()
-            self.audio_player.pause()
-            self.playBtn.setText(STRING_PLAY)
-
-    def train(self):
-        assert(self.trainBtn.text() in [STRING_TRAIN, STRING_TRAINING])
-        if self.trainBtn.text() == STRING_TRAIN:
-            self.trainBtn.setEnabled(False)
-            self.trainBtn.setText(STRING_TRAINING)
-            self.playBtn.setEnabled(False)
-            self.showSelfCB.setEnabled(False)
-            self.controlLayout.repaint()
-            self.zero_features()
-            self.trainBtn.setText(STRING_TRAIN)
-            self.trainBtn.setEnabled(True)
-            self.playBtn.setEnabled(True)
-            self.showSelfCB.setEnabled(True)
+            self.pause()
 
     def zero_features(self):
-        # self.pause()
-        # self.showSelf()
-        time.sleep(2)
+        self.pause()
+        if not self.showSelfCB.isChecked():
+            self.showSelfCB.setChecked(True)
+        self.record_video.start_recording()
+        self.centralwidget.repaint()
+        time.sleep(4)
+        self.record_video.stop_recording()
+
+    def train(self):
+        # disable controls
+        self.trainBtn.setEnabled(False)
+        self.trainBtn.setText(STRING_TRAINING)
+        self.playBtn.setEnabled(False)
+        self.showSelfCB.setEnabled(False)
+        self.controlLayout.repaint()
+        # zero features
+        self.zero_features()
+        # reenable controls
+        self.trainBtn.setText(STRING_TRAIN)
+        self.trainBtn.setEnabled(True)
+        self.playBtn.setEnabled(True)
+        self.showSelfCB.setEnabled(True)
 
     def mood_change_slot(self, mood_change):
         # if mood_change == 1:
