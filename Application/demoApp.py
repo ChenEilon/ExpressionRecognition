@@ -6,15 +6,19 @@
 #
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
+from PyQt5.QtMultimedia import *
 import sys
 import qdarkstyle
 import numpy as np
 import cv2
 import dlib
+import pickle
+import glob
 
 DELTA_THRESHOLD = 2
-HAPPY_SONG = "./Bamboleo - Gipsy Kings.mp3"
-SAD_SONG = "./Goodbye My Lover - James Blunt.mp3"
+HAPPY_SONG = "./Bamboleo - Gipsy Kings.mp3" #TODO remove
+SAD_SONG = "./Goodbye My Lover - James Blunt.mp3" #TODO remove
+PLAYLISTS_PATH = r"./Playlists"
 REF_POINTS = [4, 14, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
 EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "anger"]
 MOOD_PREDICTOR_FILENAME = "modelLF.dat"
@@ -80,10 +84,9 @@ class Ui_MainWindow(object):
         self.playBtn.clicked.connect(self.play_pause)
         self.showSelfCB.stateChanged.connect(self.showSelf)
         #####Audio part#####
-        self.audio_player = QtMultimedia.QMediaPlayer()
-        #self.audio_player.stateChanged.connect(app.quit)
-        self.happy_song = QtCore.QUrl.fromLocalFile(HAPPY_SONG)
-        self.sad_song = QtCore.QUrl.fromLocalFile(SAD_SONG)
+        self.audio_player = MoodPlayLists()
+        #self.happy_song = QtCore.QUrl.fromLocalFile(HAPPY_SONG)
+        #self.sad_song = QtCore.QUrl.fromLocalFile(SAD_SONG)
         mood_change_slot = self.mood_change_slot
         self.face_detection_widget.mood_change.connect(mood_change_slot)
         
@@ -94,8 +97,8 @@ class Ui_MainWindow(object):
         if(self.playBtn.text()=="Play"):
             self.showSelf()
             self.record_video.start_recording()
-            content = QtMultimedia.QMediaContent(self.happy_song)
-            self.audio_player.setMedia(content)
+            #content = QtMultimedia.QMediaContent(self.happy_song)
+            #self.audio_player.setMedia(content)
             self.audio_player.play()
             self.playBtn.setText("Pause")
         else: #Pause
@@ -104,11 +107,12 @@ class Ui_MainWindow(object):
             self.playBtn.setText("Play")
     
     def mood_change_slot(self, mood_change):
-        if mood_change == 1:
-            content = QtMultimedia.QMediaContent(self.happy_song)
-        else:
-            content = QtMultimedia.QMediaContent(self.sad_song)
-        self.audio_player.setMedia(content)
+        # if mood_change == 1:
+            # content = QtMultimedia.QMediaContent(self.happy_song)
+        # else:
+            # content = QtMultimedia.QMediaContent(self.sad_song)
+        # self.audio_player.setMedia(content)
+        self.audio_player.change_playlist(mood_change)
         self.audio_player.play()
 
 class RecordVideo(QtCore.QObject):
@@ -207,7 +211,8 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self.image = QtGui.QImage()
         
     def check_mood_change(self, face_landmarks):
-        #TODO check
+        """
+        #TODO enable & check
         #1. Calculate Features and mood
         frame_features = self.features.extract_features(face_landmarks, False)
         mood = self.mood_classifier.predict(frame_features)
@@ -217,6 +222,9 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         #3. (else) Send a signal if necessary 
         self.last_emotion = mood
         self.mood_change.emit(mood)
+        """
+        self.mood_change.emit(self.last_emotion)
+        self.last_emotion = (self.last_emotion+1)%2
 
 class FaceFeatures(object):
     def __init__(self, neutral_features):
@@ -241,6 +249,25 @@ class FaceFeatures(object):
         if not is_first:
             features_vector = features_vector - neutral_features
         return features_vector
+
+class MoodPlayLists(QtMultimedia.QMediaPlayer):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        moods = glob.glob(PLAYLISTS_PATH +"//*")
+        self.playlists = []
+        for m in moods:
+            songs = glob.glob(m + "//*")
+            for s in songs:
+                playlist = QMediaPlaylist(self)
+                url = QtCore.QUrl.fromLocalFile(s)
+                playlist.addMedia(QMediaContent(url))
+            playlist.setPlaybackMode(QMediaPlaylist.Loop)
+            self.playlists.append(playlist)
+        self.setPlaylist(self.playlists[0])
+    
+    def change_playlist(self, mood=0):
+        self.setPlaylist(self.playlists[mood])
+
         
 class app_utils():
     def rect_to_bb(rect):
