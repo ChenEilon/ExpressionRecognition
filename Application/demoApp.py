@@ -184,11 +184,13 @@ class Ui_MainWindow(object):
 
     def save(self):
         filename = QtWidgets.QFileDialog.getSaveFileName(self.centralwidget, "Save Neutral Features")[0]
-        self.face_detection_widget.features.save_neutral_features(filename)
+        if filename:
+            self.face_detection_widget.features.save_neutral_features(filename)
 
     def load(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, "Load Neutral Features")[0]
-        self.face_detection_widget.features.load_neutral_features(filename)
+        if filename:
+            self.face_detection_widget.features.load_neutral_features(filename)
 
     def progress_slot(self, value):
         progress_value = min(max(int(value), 0), 100)
