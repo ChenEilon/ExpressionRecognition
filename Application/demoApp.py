@@ -23,6 +23,7 @@ EMOTIONS = ["neutral",  "happy", "sadness", "surprise",  "fear", "disgust", "ang
 MOOD_PREDICTOR_FILENAME = "modelLF.dat"
 NEUTRAL_FEATURES_FILENAME = "neutral_features.npy"
 MIN_ZERO_SAMPLES = 20
+MOOD_COUNTER_TRESHOLD = 2
 
 wanted_landmarks = [i-1 for i in REF_POINTS]
 
@@ -238,6 +239,8 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self.zero_flag = False
         self.zero_landmarks = []
         self.last_emotion = 0 #Start from neutral
+        self.emotion_tmp = 0
+        self.last_emotion_counter_tmp = 0
 
     def is_frame_different(self, face_landmarks):
         """
@@ -297,20 +300,25 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self.image = QtGui.QImage()
 
     def check_mood_change(self, face_landmarks):
-        #TODO enable & check
         #1. Calculate Features and mood
         frame_features = self.features.extract_features(face_landmarks, False)
         mood = self.mood_classifier.predict([frame_features])
         #2. Check previous mood and update
         if (mood == self.last_emotion):
-            return
-        #3. (else) Send a signal if necessary 
-        self.last_emotion = mood
-        self.mood_change.emit(mood)
+            self.last_emotion_counter_tmp = 0
+            self.emotion_tmp = 0
+        elif (mood == self.emotion_tmp):
+            self.last_emotion_counter_tmp += 1
+            #3. Send a signal if necessary 
+            if (self.last_emotion_counter_tmp == MOOD_COUNTER_TRESHOLD): #Changing moods
+                self.mood_change.emit(mood)
+                self.last_emotion_counter_tmp = 0
+                self.emotion_tmp = 0
+                self.last_emotion = mood
+        else:
+            self.last_emotion_counter_tmp = 1
+            self.emotion_tmp = mood
         
-        # self.mood_change.emit(self.last_emotion)
-        # self.last_emotion = (self.last_emotion+1)%2
-
     def zero_features(self):
         self.zero_flag = True
         self.zero_landmarks = []
