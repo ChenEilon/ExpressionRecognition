@@ -341,7 +341,7 @@ class FaceFeatures(object):
     def zero(self, zero_landmarks):
         if len(zero_landmarks) < MIN_ZERO_SAMPLES:
             return
-        indices = [len(zero_landmarks) // 10, len(zero_landmarks) // 2, -1]
+        indices = (np.asarray([0.1, 0.5, 0.9]) * len(zero_landmarks)).astype(int)
         features_mat = np.asarray([self.extract_features(v, True) for v in zero_landmarks[indices]])
         neutral_features = np.average(features_mat, axis=0)
         np.save(NEUTRAL_FEATURES_FILENAME, neutral_features)
