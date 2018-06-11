@@ -30,31 +30,39 @@ wanted_landmarks = [i-1 for i in REF_POINTS]
 STRING_TITLE = "Emotion recognition music player"
 STRING_PLAY = "Play"
 STRING_PAUSE = "Pause"
+STRING_SHOW_SELF = "Show Self"
 STRING_TRAIN = "Train"
 STRING_TRAINING = "Training..."
-STRING_SHOW_SELF = "Show Self"
+STRING_SAVE = "Save"
+STRING_LOAD = "Load"
 STRING_LABEL = "DEMO APP - Emotion recognition music player"
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         #####Qt Designer part#####
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(360, 360)
+        MainWindow.setFixedSize(360, 380)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.controlLayout = QtWidgets.QWidget(self.centralwidget)
-        self.controlLayout.setGeometry(QtCore.QRect(10, 283, 330, 23))
+        self.controlLayout.setGeometry(QtCore.QRect(10, 283, 330, 50))
         self.controlLayout.setObjectName("controlLayout")
-        self.trainBtn = QtWidgets.QPushButton(self.controlLayout)
-        self.trainBtn.setGeometry(QtCore.QRect(0, 0, 90, 23))
-        self.trainBtn.setObjectName("trainBtn")
         self.playBtn = QtWidgets.QPushButton(self.controlLayout)
-        self.playBtn.setGeometry(QtCore.QRect(100, 0, 90, 23))
+        self.playBtn.setGeometry(QtCore.QRect(0, 0, 90, 24))
         self.playBtn.setObjectName("playBtn")
         self.showSelfCB = QtWidgets.QCheckBox(self.controlLayout)
         self.showSelfCB.setGeometry(QtCore.QRect(260, 0, 70, 17))
         self.showSelfCB.setObjectName("showSelfCB")
         self.showSelfCB.setCheckState(2)
+        self.trainBtn = QtWidgets.QPushButton(self.controlLayout)
+        self.trainBtn.setGeometry(QtCore.QRect(0, 25, 90, 24))
+        self.trainBtn.setObjectName("trainBtn")
+        self.saveBtn = QtWidgets.QPushButton(self.controlLayout)
+        self.saveBtn.setGeometry(QtCore.QRect(100, 25, 40, 24))
+        self.saveBtn.setObjectName("saveBtn")
+        self.loadBtn = QtWidgets.QPushButton(self.controlLayout)
+        self.loadBtn.setGeometry(QtCore.QRect(150, 25, 40, 24))
+        self.loadBtn.setObjectName("loadBtn")
         self.playSlider = QtWidgets.QSlider(self.centralwidget)
         self.playSlider.setGeometry(QtCore.QRect(10, 230, 321, 22))
         self.playSlider.setOrientation(QtCore.Qt.Horizontal)
@@ -92,9 +100,11 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", STRING_TITLE))
-        self.trainBtn.setText(_translate("MainWindow", STRING_TRAIN))
         self.playBtn.setText(_translate("MainWindow", STRING_PLAY))
         self.showSelfCB.setText(_translate("MainWindow", STRING_SHOW_SELF))
+        self.trainBtn.setText(_translate("MainWindow", STRING_TRAIN))
+        self.saveBtn.setText(_translate("MainWindow", STRING_SAVE))
+        self.loadBtn.setText(_translate("MainWindow", STRING_LOAD))
         self.titleLabel.setText(_translate("MainWindow", STRING_LABEL))
 
     def guiActivate(self):
@@ -106,9 +116,11 @@ class Ui_MainWindow(object):
         self.record_video.image_data.connect(image_data_slot)
         # connect the run button to the start recording slot
         self.verticalLayout.addWidget(self.face_detection_widget)
-        self.trainBtn.clicked.connect(self.train)
         self.playBtn.clicked.connect(self.play_pause)
         self.showSelfCB.stateChanged.connect(self.showSelf)
+        self.trainBtn.clicked.connect(self.train)
+        self.saveBtn.clicked.connect(self.save)
+        self.loadBtn.clicked.connect(self.load)
         #####Audio part#####
         self.audio_player = MoodPlayLists()
         mood_change_slot = self.mood_change_slot
@@ -148,10 +160,9 @@ class Ui_MainWindow(object):
 
     def train(self):
         # disable controls
-        self.trainBtn.setEnabled(False)
         self.trainBtn.setText(STRING_TRAINING)
-        self.playBtn.setEnabled(False)
-        self.showSelfCB.setEnabled(False)
+        self.controlLayout.setEnabled(False)
+        self.progress_slot(0)
         self.songLabel.setVisible(False)
         self.progressBar.setVisible(True)
         # stop music and activate video capture
@@ -167,11 +178,17 @@ class Ui_MainWindow(object):
         self.record_video.stop_recording()
         # reenable controls
         self.trainBtn.setText(STRING_TRAIN)
-        self.trainBtn.setEnabled(True)
-        self.playBtn.setEnabled(True)
-        self.showSelfCB.setEnabled(True)
+        self.controlLayout.setEnabled(True)
         self.songLabel.setVisible(True)
         self.progressBar.setVisible(False)
+
+    def save(self):
+        filename = QtWidgets.QFileDialog.getSaveFileName(self.centralwidget, "Save Neutral Features")[0]
+        self.face_detection_widget.features.save_neutral_features(filename)
+
+    def load(self):
+        filename = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, "Load Neutral Features")[0]
+        self.face_detection_widget.features.load_neutral_features(filename)
 
     def progress_slot(self, value):
         progress_value = min(max(int(value), 0), 100)
@@ -231,7 +248,7 @@ class MoodDetectionWidget(QtWidgets.QWidget):
         self._red = (0, 0, 255)
         self._width = 2
         #features object
-        self.features = FaceFeatures() #TODO adjust - need chen's part, init neutral features..
+        self.features = FaceFeatures()
         #calculating delta between frames:
         self.prev_dists = []
         self.delta = 0
@@ -335,8 +352,19 @@ class MoodDetectionWidget(QtWidgets.QWidget):
 class FaceFeatures(object):
     def __init__(self):
         self.neutral_features = None
-        if os.path.isfile(NEUTRAL_FEATURES_FILENAME):
-            self.neutral_features = np.load(NEUTRAL_FEATURES_FILENAME)
+        self.neutral_features_filename = NEUTRAL_FEATURES_FILENAME
+        self.load_neutral_features(self.neutral_features_filename)
+
+    def set_neutral_features(self, neutral_features):
+        self.neutral_features = neutral_features
+        self.save_neutral_features(self.neutral_features_filename)
+
+    def save_neutral_features(self, filename):
+        np.save(filename, self.neutral_features)
+
+    def load_neutral_features(self, filename):
+        if os.path.isfile(filename):
+            self.set_neutral_features(np.load(filename))
 
     def zero(self, zero_landmarks):
         if len(zero_landmarks) < MIN_ZERO_SAMPLES:
@@ -344,8 +372,7 @@ class FaceFeatures(object):
         indices = (np.asarray([0.1, 0.5, 0.9]) * len(zero_landmarks)).astype(int)
         features_mat = np.asarray([self.extract_features(v, True) for v in zero_landmarks[indices]])
         neutral_features = np.average(features_mat, axis=0)
-        np.save(NEUTRAL_FEATURES_FILENAME, neutral_features)
-        self.neutral_features = neutral_features
+        self.set_neutral_features(neutral_features)
 
     def extract_features(self, face_landmarks, is_first):
         """
