@@ -353,7 +353,7 @@ class MoodDetectionWidget(QtWidgets.QWidget):
 
 class FaceFeatures(object):
     def __init__(self):
-        self.neutral_features = None
+        self.neutral_features = 0
         self.neutral_features_filename = NEUTRAL_FEATURES_FILENAME
         self.load_neutral_features(self.neutral_features_filename)
 
