@@ -28,14 +28,15 @@ MOOD_COUNTER_TRESHOLD = 2
 wanted_landmarks = [i-1 for i in REF_POINTS]
 
 STRING_TITLE = "Emotion recognition music player"
+STRING_LABEL = "DEMO APP - Emotion recognition music player"
+STRING_ADVANCED_MENU = "Advanced"
 STRING_PLAY = "Play"
 STRING_PAUSE = "Pause"
 STRING_SHOW_SELF = "Show Self"
 STRING_TRAIN = "Train"
 STRING_TRAINING = "Training..."
-STRING_SAVE = "Save"
-STRING_LOAD = "Load"
-STRING_LABEL = "DEMO APP - Emotion recognition music player"
+STRING_SAVE = "Save Nuetral Features"
+STRING_LOAD = "Load Nuetral Features"
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -48,21 +49,15 @@ class Ui_MainWindow(object):
         self.controlLayout.setGeometry(QtCore.QRect(10, 283, 330, 50))
         self.controlLayout.setObjectName("controlLayout")
         self.playBtn = QtWidgets.QPushButton(self.controlLayout)
-        self.playBtn.setGeometry(QtCore.QRect(0, 0, 90, 24))
+        self.playBtn.setGeometry(QtCore.QRect(100, 0, 90, 24))
         self.playBtn.setObjectName("playBtn")
         self.showSelfCB = QtWidgets.QCheckBox(self.controlLayout)
         self.showSelfCB.setGeometry(QtCore.QRect(260, 0, 70, 17))
         self.showSelfCB.setObjectName("showSelfCB")
         self.showSelfCB.setCheckState(2)
         self.trainBtn = QtWidgets.QPushButton(self.controlLayout)
-        self.trainBtn.setGeometry(QtCore.QRect(0, 25, 90, 24))
+        self.trainBtn.setGeometry(QtCore.QRect(0, 0, 90, 24))
         self.trainBtn.setObjectName("trainBtn")
-        self.saveBtn = QtWidgets.QPushButton(self.controlLayout)
-        self.saveBtn.setGeometry(QtCore.QRect(100, 25, 40, 24))
-        self.saveBtn.setObjectName("saveBtn")
-        self.loadBtn = QtWidgets.QPushButton(self.controlLayout)
-        self.loadBtn.setGeometry(QtCore.QRect(150, 25, 40, 24))
-        self.loadBtn.setObjectName("loadBtn")
         self.playSlider = QtWidgets.QSlider(self.centralwidget)
         self.playSlider.setGeometry(QtCore.QRect(10, 230, 321, 22))
         self.playSlider.setOrientation(QtCore.Qt.Horizontal)
@@ -88,9 +83,12 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 359, 21))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        self.advancedMenu = self.menubar.addMenu("")
+        self.saveAct = self.advancedMenu.addAction("")
+        self.loadAct = self.advancedMenu.addAction("")
+        # self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        # self.statusbar.setObjectName("statusbar")
+        # MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -100,11 +98,12 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", STRING_TITLE))
+        self.advancedMenu.setTitle(_translate("MainWindow", STRING_ADVANCED_MENU))
+        self.saveAct.setText(_translate("MainWindow", STRING_SAVE))
+        self.loadAct.setText(_translate("MainWindow", STRING_LOAD))
         self.playBtn.setText(_translate("MainWindow", STRING_PLAY))
         self.showSelfCB.setText(_translate("MainWindow", STRING_SHOW_SELF))
         self.trainBtn.setText(_translate("MainWindow", STRING_TRAIN))
-        self.saveBtn.setText(_translate("MainWindow", STRING_SAVE))
-        self.loadBtn.setText(_translate("MainWindow", STRING_LOAD))
         self.titleLabel.setText(_translate("MainWindow", STRING_LABEL))
 
     def guiActivate(self):
@@ -115,12 +114,12 @@ class Ui_MainWindow(object):
         image_data_slot = self.face_detection_widget.image_data_slot
         self.record_video.image_data.connect(image_data_slot)
         # connect the run button to the start recording slot
+        self.saveAct.triggered.connect(self.save)
+        self.loadAct.triggered.connect(self.load)
         self.verticalLayout.addWidget(self.face_detection_widget)
         self.playBtn.clicked.connect(self.play_pause)
         self.showSelfCB.stateChanged.connect(self.showSelf)
         self.trainBtn.clicked.connect(self.train)
-        self.saveBtn.clicked.connect(self.save)
-        self.loadBtn.clicked.connect(self.load)
         #####Audio part#####
         self.audio_player = MoodPlayLists()
         mood_change_slot = self.mood_change_slot
