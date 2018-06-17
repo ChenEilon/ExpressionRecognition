@@ -16,6 +16,7 @@ import pickle
 import glob
 import os
 
+
 DELTA_THRESHOLD = 1.5
 PLAYLISTS_PATH = r"./Playlists"
 REF_POINTS = [1, 4, 14, 17, 18, 20, 22, 23, 25, 27, 28, 31, 32, 36, 37, 38, 40, 42, 43, 45, 46, 47, 49, 51, 52, 53, 61, 63, 65, 67]
@@ -24,11 +25,13 @@ MOOD_PREDICTOR_FILENAME = "modelLF.dat"
 NEUTRAL_FEATURES_FILENAME = "neutral_features.npy"
 MIN_ZERO_SAMPLES = 20
 MOOD_COUNTER_TRESHOLD = 2
+MAX_NAME_LEN = 15
 
 wanted_landmarks = [i-1 for i in REF_POINTS]
 
 STRING_TITLE = "Emotion recognition music player"
 STRING_SUBTITLE = "DEMO APP - Emotion recognition music player"
+STRING_USER = "Hi, %s !"
 STRING_ADVANCED_MENU = "Advanced"
 STRING_PLAY = "Play"
 STRING_PAUSE = "Pause"
@@ -39,6 +42,10 @@ STRING_SAVE = "Save Nuetral Features"
 STRING_LOAD = "Load Nuetral Features"
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        self.welcomeDialog = welcomeWindow()
+        self.user_name = "None"
+
     def setupUi(self, MainWindow):
         #####Qt Designer part#####
         MainWindow.setObjectName("MainWindow")
@@ -69,6 +76,9 @@ class Ui_MainWindow(object):
         self.titleLabel = QtWidgets.QLabel(self.centralwidget)
         self.titleLabel.setGeometry(QtCore.QRect(20, 10, 231, 16))
         self.titleLabel.setObjectName("titleLabel")
+        self.userLabel = QtWidgets.QLabel(self.centralwidget)
+        self.userLabel.setGeometry(QtCore.QRect(280, 10, 40, 16))
+        self.userLabel.setObjectName("userLabel")
         self.verticalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 40, 311, 181))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
@@ -95,6 +105,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        #####Gui config#####
         self.guiActivate()
 
     def retranslateUi(self, MainWindow):
@@ -110,6 +121,7 @@ class Ui_MainWindow(object):
         self.progressBar.setFormat("{0}: %p%".format(_translate("MainWindow", STRING_TRAINING)))
 
     def guiActivate(self):
+        self.userLabel.hide()
         #####Video part#####
         self.face_detection_widget = MoodDetectionWidget()
         self.record_video = RecordVideo()
@@ -134,6 +146,16 @@ class Ui_MainWindow(object):
         self.audio_player.currentMediaChanged.connect(self.songChanged)
         self.audio_player.positionChanged.connect(self.positionChanged)
         self.audio_player.durationChanged.connect(self.durationChanged)
+        #####Connecting windows part#####
+        self.welcomeDialog.user_name.connect(self.user_name_slot)
+        #####User config#####
+        if self.user_name == "None":
+            self.welcomeDialog.show()
+            self.welcomeDialog.exec_() # blocks all other windows until this window is closed.
+            self.user_entered()
+        self.userLabel.setText(STRING_USER%(self.user_name))
+        self.userLabel.show()
+        
 
     def showSelf(self):
         self.face_detection_widget.setVisible(self.showSelfCB.isChecked())
@@ -141,8 +163,6 @@ class Ui_MainWindow(object):
     def play(self):
         self.showSelf()
         self.record_video.start_recording()
-        #content = QtMultimedia.QMediaContent(self.happy_song)
-        #self.audio_player.setMedia(content)
         self.audio_player.play()
         songName = self.audio_player.currentMedia().canonicalUrl().fileName()
         self.songLabel.setText("Now Playing: %s"%(songName))
@@ -189,8 +209,11 @@ class Ui_MainWindow(object):
         if filename:
             self.face_detection_widget.features.save_neutral_features(filename)
 
-    def load(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, "Load Neutral Features")[0]
+    def load(self, userFile = "None"):
+        if userFile == "None":
+            filename = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, "Load Neutral Features")[0]
+        else:
+            filename = userFile
         if filename:
             self.face_detection_widget.features.load_neutral_features(filename)
 
@@ -214,7 +237,85 @@ class Ui_MainWindow(object):
         self.playSlider.setRange(0, duration)
         
     def setPosition(self, position):
-         self.audio_player.setPosition(position)
+        self.audio_player.setPosition(position)
+
+    def user_name_slot(self, name):
+        self.user_name = name
+        print("Debug - " + name)
+        
+    def user_entered(self):
+        #1. Check for pre trainings
+        users_files = glob.glob(r"./*_%s"%(NEUTRAL_FEATURES_FILENAME))
+        user_names = [(s.split("_")[0]).split("\\")[-1] for s in users_files]
+        #2. Load or train accordingly
+        users_dict = dict(zip(user_names,users_files))
+        if self.user_name in users_dict.keys():
+            self.load(users_dict[self.user_name])
+            print("Debug - old user")
+        else:
+            self.face_detection_widget.features.neutral_features_filename = self.user_name + "_" + NEUTRAL_FEATURES_FILENAME
+            self.train()
+            print("Debug - new user")
+        
+        
+
+class welcomeWindow(QtWidgets.QDialog):
+    user_name = QtCore.pyqtSignal(object)
+    def __init__(self, parent = None):
+        super(welcomeWindow, self).__init__(parent)
+        self.setObjectName("WelcomeWindow")
+        self.resize(296, 210)
+        self.FaceTheMusicLabel = QtWidgets.QLabel(self)
+        self.FaceTheMusicLabel.setGeometry(QtCore.QRect(40, 0, 261, 61))
+        font = QtGui.QFont()
+        font.setFamily("Calibri")
+        font.setPointSize(26)
+        self.FaceTheMusicLabel.setFont(font)
+        self.FaceTheMusicLabel.setTextFormat(QtCore.Qt.AutoText)
+        self.FaceTheMusicLabel.setObjectName("FaceTheMusicLabel")
+        self.HaveWeMetLabel = QtWidgets.QLabel(self)
+        self.HaveWeMetLabel.setGeometry(QtCore.QRect(10, 70, 111, 16))
+        self.HaveWeMetLabel.setObjectName("HaveWeMetLabel")
+        self.label = QtWidgets.QLabel(self)
+        self.label.setGeometry(QtCore.QRect(10, 100, 131, 16))
+        self.label.setObjectName("label")
+        self.NameLineEdit = QtWidgets.QLineEdit(self)
+        self.NameLineEdit.setGeometry(QtCore.QRect(170, 100, 113, 25))
+        self.NameLineEdit.setObjectName("NameLineEdit")
+        self.GoButton = QtWidgets.QPushButton(self)
+        self.GoButton.setGeometry(QtCore.QRect(100, 140, 75, 28))
+        self.GoButton.setObjectName("GoButton")
+        self.ErrorLabel = QtWidgets.QLabel(self)
+        self.ErrorLabel.setGeometry(QtCore.QRect(10, 170, 150, 16))
+        self.ErrorLabel.setObjectName("ErrorLabel")
+
+        QtCore.QMetaObject.connectSlotsByName(self)
+        self.guiActivate()
+        
+    def guiActivate(self):
+        self.setWindowTitle("Welcome to Face The Music")
+        self.FaceTheMusicLabel.setText("Face The Music ")
+        self.HaveWeMetLabel.setText("Have we met before?")
+        self.label.setText("Please enter your name:")
+        self.GoButton.setText("Let\'s go!")
+        
+        self.GoButton.clicked.connect(self.letsgo)
+        self.ErrorLabel.hide()
+        self.ErrorLabel.setText("Invalid Name. Please try again.")
+        self.ErrorLabel.setStyleSheet('color: red')
+        
+    def letsgo(self):
+        name = self.NameLineEdit.text()
+        if not name.isalpha() or len(name)>MAX_NAME_LEN:
+            print("Debug - invalid name: "+ name)
+            self.ErrorLabel.show()
+        else:
+            self.ErrorLabel.hide()
+            print("Debug - and..show Player!")
+            self.user_name.emit(name)
+            print("Debug - Name is " + name)
+            self.close()
+
 
 class RecordVideo(QtCore.QObject):
     image_data = QtCore.pyqtSignal(np.ndarray)
@@ -512,16 +613,24 @@ class app_utils():
         gray = cv2.resize(gray, (350, 350))
         return gray
         
+
+
+        
 def main():
     print("Debug - starting..")
     app = QtWidgets.QApplication(sys.argv)
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5()) # setup stylesheet
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    print("Debug - setup ui..")
-    ui.setupUi(MainWindow)
-    print("Debug - and..show!")
-    MainWindow.show()
+    
+    #init windows
+    MusicWindow = QtWidgets.QMainWindow()
+    musicUi = Ui_MainWindow()
+    print("Debug - setup music ui..")
+    musicUi.setupUi(MusicWindow)
+    
+    #show welcome window
+    print("Debug - and..show welcome window!")
+    MusicWindow.show()
+
     sys.exit(app.exec_())
 
 if __name__=="__main__":
